@@ -25,7 +25,7 @@
   --scanline-opacity: 0.06;
   --font-pixel: 'Press Start 2P', monospace;
   --font-mono: 'Courier New', 'Source Code Pro', monospace;
-  --page-width: calc(100vw - 60px);
+  --page-width: 90%;
 }
 
 /* ============================================================
@@ -43,21 +43,315 @@ html {
 body {
   font-family: var(--font-mono);
   color: var(--text);
-  background: var(--bg);
+  background: linear-gradient(135deg, #4a3720 0%, #6b5240 30%, #5a4030 70%, #3a2818 100%);
   height: 100vh;
   overflow: hidden;
   position: relative;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ============================================================
-   CRT Scanline Overlay
+   CRT TV Set Frame
    ============================================================ */
-body::after {
+.tv-set {
+  position: relative;
+  width: min(80vw, 860px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  padding-top: 8px;
+}
+/* TV Antenna */
+.tv-antenna {
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.tv-antenna-pole {
+  width: 5px; height: 30px;
+  background: linear-gradient(to bottom, #999, #666);
+  border-radius: 2px;
+}
+.tv-antenna-v {
+  display: flex; gap: 0;
+  position: relative;
+}
+.tv-antenna-v::before, .tv-antenna-v::after {
   content: '';
-  position: fixed;
-  inset: 0;
+  width: 4px; height: 60px;
+  background: linear-gradient(to bottom, #aaa, #777);
+  border-radius: 2px;
+  transform-origin: bottom center;
+}
+.tv-antenna-v::before { transform: rotate(-25deg); }
+.tv-antenna-v::after  { transform: rotate(25deg); }
+.tv-antenna-tip {
+  width: 8px; height: 8px;
+  background: #ddd;
+  border-radius: 50%;
+  margin-top: -3px;
+  box-shadow: 0 0 6px rgba(200,200,255,0.4);
+}
+
+/* TV Main Body */
+.tv-body {
+  width: 100%;
+  background: linear-gradient(175deg, #8B7355 0%, #6B5340 8%, #5a4535 20%, #4a3528 40%, #5a4030 60%, #4a3528 80%, #3a2a1c 95%, #2a1a10 100%);
+  border-radius: 18px 18px 10px 10px;
+  box-shadow:
+    0 0 0 8px #1a1410,
+    0 0 0 12px #3a2a1c,
+    0 12px 60px rgba(0,0,0,0.8),
+    inset 0 2px 0 rgba(255,255,255,0.05);
+  padding: 16px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 3px solid #1a1008;
+}
+/* Wood grain texture on TV body */
+.tv-body::before {
+  content: '';
+  position: absolute;
+  top: 6px; right: 6px; bottom: 6px; left: 6px;
+  border-radius: 15px 15px 4px 4px;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    repeating-linear-gradient(1deg, transparent, transparent 2px, rgba(180,140,80,0.03) 2px, rgba(180,140,80,0.03) 3px),
+    repeating-linear-gradient(92deg, transparent, transparent 8px, rgba(120,80,40,0.04) 8px, rgba(120,80,40,0.04) 10px),
+    repeating-linear-gradient(-1deg, transparent, transparent 12px, rgba(60,30,10,0.06) 12px, rgba(60,30,10,0.06) 14px);
+}
+
+/* TV Screen Bezel */
+.tv-screen-bezel {
+  background: #080808;
+  border-radius: 12px 12px 4px 4px;
+  padding: 8px;
+  position: relative;
+  z-index: 1;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.9),
+    inset 0 0 0 4px rgba(0,0,0,0.5),
+    0 0 0 3px #0d0d0d;
+  overflow: hidden;
+  border: 3px solid #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* TV Screen area */
+.tv-screen {
+  width: 100%; flex: 1; min-height: 0;
+  background: #000;
+  border-radius: 8px 8px 2px 2px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,0.6),
+    inset 0 0 20px rgba(0,0,0,0.4);
+}
+
+/* TV Control Panel (below screen) */
+.tv-control-panel {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(50,40,30,0.6), rgba(30,22,15,0.8));
+  border-top: 2px solid rgba(255,179,71,0.15);
+  margin: 0 -4px;
+}
+
+/* Channel Knob */
+.tv-knob-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Speaker grille */
+.tv-speaker {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.tv-speaker-slot {
+  width: 3px; height: 24px;
+  background: #1a1a1a;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+}
+.tv-knob {
+  width: 44px; height: 44px;
+  background: radial-gradient(circle at 35% 35%, #666, #222 50%, #0a0a0a 100%);
+  border-radius: 50%;
+  cursor: grab;
+  position: relative;
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.6),
+    0 0 0 2px #1a1a1a,
+    inset 0 2px 2px rgba(255,255,255,0.08);
+  user-select: none;
+  transition: transform 0.08s ease-out;
+  -webkit-user-select: none;
+}
+.tv-knob:active { cursor: grabbing; }
+.tv-knob::after {
+  content: '';
+  position: absolute;
+  top: 6px; left: 50%;
+  transform: translateX(-50%);
+  width: 4px; height: 10px;
+  background: var(--amber);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(255,179,71,0.6);
+}
+/* Knob grip ridges */
+.tv-knob-grip {
+  position: absolute;
+  top: 2px; right: 2px; bottom: 2px; left: 2px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    #333 0deg 8deg,
+    #222 8deg 16deg
+  );
+  opacity: 0.3;
+}
+.tv-knob-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--amber);
+  letter-spacing: 3px;
+  font-weight: bold;
+}
+.tv-knob-channel {
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  color: var(--green);
+  margin-left: 10px;
+  text-shadow: 0 0 10px rgba(57,255,20,0.6);
+}
+
+/* Physical button row */
+.tv-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tv-btn {
+  width: 18px; height: 14px;
+  background: linear-gradient(180deg, #444, #1a1a1a 40%, #000 100%);
+  border-radius: 3px 3px 2px 2px;
+  border: 1px solid #333;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  cursor: pointer;
+  position: relative;
+}
+.tv-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.5);
+}
+.tv-btn-label {
+  font-size: 0.4rem;
+  color: rgba(255,179,71,0.35);
+  font-family: var(--font-mono);
+  text-align: center;
+  letter-spacing: 1px;
+}
+.tv-btn-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+/* Contrast & Brightness knobs */
+.tv-small-knob {
+  width: 16px; height: 16px;
+  background: radial-gradient(circle at 35% 35%, #555, #1a1a1a 70%, #000 100%);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  position: relative;
+}
+.tv-small-knob::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 50%;
+  transform: translateX(-50%);
+  width: 2px; height: 5px;
+  background: var(--amber);
+  border-radius: 1px;
+}
+
+/* TV Brand logo */
+.tv-brand {
+  font-family: 'KaiTi', 'STKaiti', serif;
+  font-size: 0.8rem;
+  color: rgba(255,179,71,0.45);
+  letter-spacing: 5px;
+  text-shadow: 0 0 4px rgba(255,179,71,0.3);
+  font-weight: bold;
+  background: rgba(0,0,0,0.3);
+  padding: 3px 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,179,71,0.12);
+}
+
+/* Power button */
+.tv-power {
+  width: 10px; height: 10px;
+  background: radial-gradient(circle, #600, #300);
+  border-radius: 50%;
+  border: 1px solid #555;
+  box-shadow: 0 0 4px rgba(255,0,0,0.3), inset 0 0 2px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+.tv-power.on {
+  background: radial-gradient(circle, #0f0, #060);
+  box-shadow: 0 0 8px rgba(0,255,0,0.5), inset 0 0 2px rgba(0,0,0,0.3);
+  border-color: #555;
+}
+
+/* TV Legs */
+.tv-legs {
+  display: flex;
+  justify-content: space-between;
+  width: 65%;
+  margin-top: 0;
+  z-index: 0;
+}
+.tv-leg {
+  width: 60px; height: 20px;
+  background: linear-gradient(180deg, #3a3028, #1a1410);
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+}
+
+/* ============================================================
+   CRT Scanline Overlay (now inside .tv-screen)
+   ============================================================ */
+.tv-screen::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
   pointer-events: none;
   z-index: 9999;
   background: repeating-linear-gradient(
@@ -71,66 +365,139 @@ body::after {
 }
 
 /* CRT vignette */
-body::before {
+.tv-screen::before {
   content: '';
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
   pointer-events: none;
   z-index: 9998;
-  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.5) 100%);
 }
 
 /* Noise overlay */
 .noise {
-  position: fixed; inset: 0; pointer-events: none; z-index: 9997;
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; z-index: 9997;
   background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
 /* ============================================================
-   Boot Screen Animation
+   Boot Screen — CRT Snow → Welcome
    ============================================================ */
 .boot-screen {
-  position: fixed; inset: 0; z-index: 10000;
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10001;
   background: #000;
   display: flex; align-items: center; justify-content: center;
   flex-direction: column;
-  transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+  transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+  overflow: hidden;
 }
 .boot-screen.hidden {
   opacity: 0; visibility: hidden; pointer-events: none;
 }
-.boot-dot {
-  width: 8px; height: 8px;
-  background: #fff;
-  border-radius: 50%;
-  animation: bootPulse 1.2s ease-out forwards;
-  box-shadow: 0 0 20px #fff, 0 0 60px #fff;
+/* CRT TV frame */
+.boot-tv-frame {
+  width: min(85vw, 600px);
+  aspect-ratio: 4/3;
+  background: #111;
+  border: 8px solid #2a2a2a;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 4px #1a1a1a,
+    0 0 0 10px #222,
+    0 0 80px rgba(0,0,0,0.8),
+    inset 0 0 60px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
 }
-@keyframes bootPulse {
-  0% { transform: scale(1); opacity: 1; }
-  30% { transform: scale(25); opacity: 0.9; }
-  60% { transform: scale(80); opacity: 0.3; }
-  100% { transform: scale(120); opacity: 0; }
+/* TV screen area */
+.boot-screen-area {
+  position: absolute;
+  top: 20px; right: 20px; bottom: 20px; left: 20px;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.boot-line {
-  width: 60%;
-  height: 2px;
-  background: var(--amber);
-  margin-top: 60px;
-  opacity: 0;
-  animation: bootLine 0.4s 0.8s ease-out forwards;
+/* Snow / static layer */
+.boot-snow {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background: #000;
+  animation: snowNoise 0.12s steps(3) infinite;
 }
-@keyframes bootLine {
-  to { opacity: 1; width: 80%; }
+.boot-snow::before {
+  content: '';
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(255,255,255,0.06) 3px, rgba(255,255,255,0.06) 6px
+  );
 }
-.boot-text {
+@keyframes snowNoise {
+  0%   { opacity: 0.95; filter: brightness(1.3) contrast(1.5); }
+  33%  { opacity: 0.7; filter: brightness(0.6) contrast(2); }
+  66%  { opacity: 0.9; filter: brightness(0.3) contrast(3); }
+  100% { opacity: 0.85; filter: brightness(1) contrast(1.8); }
+}
+/* Snow clearing transition */
+.boot-snow.clearing {
+  animation: snowClear 1s ease-out forwards;
+}
+@keyframes snowClear {
+  0%   { opacity: 0.9; filter: blur(0px); }
+  50%  { opacity: 0.5; filter: blur(2px); }
+  100% { opacity: 0; filter: blur(8px); }
+}
+/* Welcome text inside screen */
+.boot-welcome {
+  position: absolute;
+  z-index: 2;
   font-family: var(--font-pixel);
-  font-size: 0.7rem;
+  font-size: clamp(0.7rem, 3vw, 1.3rem);
   color: var(--amber);
-  margin-top: 20px;
+  text-shadow: 0 0 30px rgba(255,179,71,0.8), 0 0 60px rgba(255,179,71,0.4);
   opacity: 0;
-  animation: bootLine 0.5s 1.0s ease-out forwards;
+  transform: scale(0.5);
+  text-align: center;
+  line-height: 1.8;
+  pointer-events: none;
 }
+.boot-welcome.show {
+  animation: welcomeIn 0.8s ease-out forwards;
+}
+@keyframes welcomeIn {
+  0%   { opacity: 0; transform: scale(0.5); }
+  60%  { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+/* Power indicator LED */
+.boot-led {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #f00;
+  box-shadow: 0 0 8px #f00;
+  position: absolute;
+  bottom: 8px; right: 20px;
+  animation: ledBlink 0.5s ease-in-out 3;
+}
+.boot-led.on { background: #0f0; box-shadow: 0 0 12px #0f0; animation: none; }
+@keyframes ledBlink {
+  0%, 100% { background: #f00; box-shadow: 0 0 8px #f00; }
+  50% { background: #400; box-shadow: none; }
+}
+/* Channel label under TV */
+.boot-channel {
+  margin-top: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--green);
+  letter-spacing: 4px;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.boot-channel.show { opacity: 1; }
 
 /* ============================================================
    Header
@@ -138,14 +505,15 @@ body::before {
 .header {
   position: relative;
   z-index: 10;
-  padding: 16px 30px 12px;
+  padding: 5px 14px 3px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 6px;
   border-bottom: 1px solid rgba(255,179,71,0.2);
   background: rgba(10,8,3,0.95);
+  flex-shrink: 0;
 }
 
 .title-group {
@@ -153,7 +521,7 @@ body::before {
 }
 .title-main {
   font-family: var(--font-pixel);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: var(--amber);
   position: relative;
   text-shadow:
@@ -220,13 +588,15 @@ body::before {
 .timeline-wrapper {
   position: relative;
   z-index: 5;
-  height: calc(100vh - 200px);
+  flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
+  -webkit-scroll-snap-type: x mandatory;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   display: flex;
-  padding: 20px 0;
+  padding: 8px 0;
+  min-height: 0;
 }
 .timeline-wrapper::-webkit-scrollbar { height: 6px; }
 .timeline-wrapper::-webkit-scrollbar-track { background: #111; }
@@ -239,10 +609,12 @@ body::before {
   min-width: var(--page-width);
   max-width: var(--page-width);
   height: 100%;
+  min-height: 0;
+  -webkit-scroll-snap-align: start;
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
-  padding: 0 40px;
+  padding: 0 24px;
   flex-shrink: 0;
 }
 
@@ -250,14 +622,14 @@ body::before {
   display: flex;
   align-items: baseline;
   gap: 16px;
-  margin-bottom: 18px;
-  padding-bottom: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 2px solid var(--amber);
   box-shadow: 0 2px 10px rgba(255,179,71,0.15);
 }
 .era-year {
   font-family: var(--font-pixel);
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   color: var(--amber);
   text-shadow: 0 0 30px rgba(255,179,71,0.5);
 }
@@ -272,9 +644,9 @@ body::before {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 16px;
+  gap: 14px;
   flex: 1;
-  align-content: start;
+  min-height: 0;
 }
 
 /* ============================================================
@@ -290,12 +662,12 @@ body::before {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 180px;
+  min-height: 160px;
 }
 .card::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background: radial-gradient(circle at 50% 0%, rgba(255,179,71,0.08), transparent 70%);
   opacity: 0;
   transition: opacity 0.3s;
@@ -310,7 +682,7 @@ body::before {
 
 /* Card Cover */
 .card-cover {
-  height: 100px;
+  height: 95px;
   position: relative;
   display: flex;
   align-items: center;
@@ -321,13 +693,13 @@ body::before {
 .card-cover::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background: var(--cover-gradient, linear-gradient(135deg, #2a1a0a 0%, #4a2a10 50%, #1a0a00 100%));
 }
 .card-cover::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
   mix-blend-mode: multiply;
 }
@@ -402,13 +774,7 @@ body::before {
    Navigation Dots
    ============================================================ */
 .nav-dots {
-  position: fixed;
-  bottom: 55px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 12px;
-  z-index: 20;
+  display: none;
 }
 .nav-dot {
   width: 10px; height: 10px;
@@ -425,44 +791,24 @@ body::before {
 }
 .nav-dot:hover { border-color: var(--amber); }
 
-.nav-arrows {
-  position: fixed;
-  bottom: 48px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 30px;
-  z-index: 20;
-}
-.nav-arrow {
-  font-family: var(--font-pixel);
-  font-size: 1.2rem;
-  color: var(--amber);
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 8px 16px;
-  opacity: 0.6;
-  transition: opacity 0.3s;
-}
-.nav-arrow:hover { opacity: 1; }
+.nav-arrows { display: none; }
+.nav-arrow { display: none; }
 
 /* ============================================================
    Footer
    ============================================================ */
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 0; right: 0;
+  position: relative;
   z-index: 10;
-  padding: 10px 30px;
+  padding: 4px 16px;
   background: rgba(10,8,3,0.95);
   border-top: 1px solid rgba(255,179,71,0.2);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.55rem;
   color: var(--text-dim);
+  flex-shrink: 0;
 }
 .footer-stat { color: var(--amber); }
 
@@ -478,9 +824,8 @@ body::before {
    Modal / Detail Overlay
    ============================================================ */
 .modal-overlay {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(4px);
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 100;
+  background: rgba(0,0,0,0.88);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; visibility: hidden;
   transition: opacity 0.35s, visibility 0.35s;
@@ -624,7 +969,7 @@ body::before {
 }
 .video-container iframe {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   width: 100%;
   height: 100%;
   border: none;
@@ -639,6 +984,135 @@ body::before {
   font-size: 0.8rem;
   border: 1px dashed var(--border-glow);
   border-radius: 4px;
+}
+
+/* ============================================================
+   Hover Preview — Fullscreen inside TV
+   ============================================================ */
+.hover-preview {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(0,0,0,0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3%;
+  transition: opacity 0.35s ease-out;
+  gap: 12px;
+}
+.hover-preview.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.hover-video-wrap {
+  width: 90%;
+  flex: 1;
+  max-height: 65%;
+  min-height: 40vh;
+  background: #000;
+  border: 2px solid var(--amber);
+  border-radius: 4px;
+  box-shadow: 0 0 40px rgba(255,179,71,0.3);
+  overflow: hidden;
+  position: relative;
+}
+.hover-video-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+.hover-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  color: var(--amber);
+  text-shadow: 0 0 12px rgba(255,179,71,0.5);
+  flex-shrink: 0;
+  padding: 8px 0;
+}
+.hover-info-bar .badge {
+  font-size: 0.6rem;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+}
+
+/* ============================================================
+   Newspaper / Program Guide
+   ============================================================ */
+.newspaper {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 85;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(180deg, #f5edd5, #e8dbb8);
+  border-top: 4px double #8b7355;
+  padding: 14px 20px;
+  max-height: 40%;
+  overflow-y: auto;
+  font-family: 'KaiTi', 'STKaiti', 'SimSun', serif;
+  color: #3a2a1a;
+}
+.newspaper.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.newspaper-header {
+  text-align: center;
+  border-bottom: 2px solid #8b7355;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.newspaper-title {
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 4px;
+  color: #3a2a1a;
+}
+.newspaper-date {
+  font-size: 0.6rem;
+  color: #8b7355;
+  margin-top: 2px;
+}
+.newspaper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+.newspaper-item {
+  font-size: 0.65rem;
+  padding: 5px 8px;
+  border-bottom: 1px dotted #c4a97d;
+  cursor: pointer;
+  transition: background 0.2s;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.newspaper-item:hover {
+  background: rgba(139,115,85,0.15);
+}
+.newspaper-item .np-time {
+  color: #8b7355;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  margin-right: 4px;
+}
+.newspaper-item .np-title {
+  color: #3a2a1a;
 }
 
 /* ============================================================
@@ -661,7 +1135,7 @@ body::before {
    Responsive
    ============================================================ */
 @media (max-width: 1024px) {
-  :root { --page-width: 90vw; }
+  :root { --page-width: 88%; }
   .era-grid { grid-template-columns: repeat(3, 1fr); }
   .title-main { font-size: 1rem; }
   .era-year { font-size: 1.8rem; }
@@ -675,6 +1149,7 @@ body::before {
     height: auto;
     overflow-x: hidden;
     overflow-y: auto;
+    -webkit-scroll-snap-type: y mandatory;
     scroll-snap-type: y mandatory;
     flex-direction: column;
     padding: 10px 0;
@@ -694,62 +1169,170 @@ body::before {
   .era-year { font-size: 1.4rem; }
 }
 
-/* CRT screen flicker — subtle, random via animation delay trick */
+/* ============================================================
+   Channel Switch Transition
+   ============================================================ */
+.channel-switch-overlay {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  background: #000;
+  transition: opacity 0.05s;
+}
+.channel-switch-overlay.active {
+  animation: channelSwitch 0.3s steps(1) forwards;
+}
+@keyframes channelSwitch {
+  0%   { background: #fff; opacity: 1; filter: brightness(5) contrast(5) blur(3px); }
+  15%  { background: #000; opacity: 0.85; filter: brightness(0.1) contrast(5) blur(0px); }
+  35%  { background: #fff; opacity: 0.5; filter: brightness(3) contrast(3) blur(1px); }
+  60%  { background: #111; opacity: 0.15; filter: brightness(1.2) contrast(1.5) blur(0px); }
+  100% { background: #000; opacity: 0; filter: brightness(1) contrast(1) blur(0px); }
+}
+
+/* CRT screen flicker — subtle */
 @keyframes flicker {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.97; }
 }
-body { animation: flicker 8s infinite; }
+.tv-screen { animation: flicker 8s infinite; }
 </style>
 </head>
 <body>
 
-<!-- Boot Screen -->
+<!-- Boot Screen (covers everything during startup) -->
 <div class="boot-screen" id="bootScreen">
-  <div class="boot-dot"></div>
-  <div class="boot-line"></div>
-  <div class="boot-text">CHANNEL 80s · 信号接入中...</div>
+  <div class="boot-tv-frame">
+    <div class="boot-screen-area">
+      <div class="boot-snow" id="bootSnow"></div>
+      <div class="boot-welcome" id="bootWelcome">欢迎来到<br>80 年 代</div>
+    </div>
+    <div class="boot-led" id="bootLed"></div>
+  </div>
+  <div class="boot-channel" id="bootChannel">CHANNEL 80s · 信号已接入</div>
 </div>
 
-<div class="noise"></div>
-
-<!-- Header -->
-<header class="header">
-  <div class="title-group">
-    <span class="title-main">80后动画记忆馆</span>
-    <span class="title-sub">1980 → 2000</span>
+<!-- ============================================================ -->
+<!-- CRT TV Set -->
+<!-- ============================================================ -->
+<div class="tv-set" id="tvSet">
+  <!-- Antenna -->
+  <div class="tv-antenna">
+    <div class="tv-antenna-tip"></div>
+    <div class="tv-antenna-v"></div>
+    <div class="tv-antenna-pole"></div>
   </div>
-  <div class="controls">
-    <input type="text" class="search-box" id="searchInput" placeholder="搜索动画名称或年份...">
-    <button class="filter-btn active" data-filter="all">全部</button>
-    <button class="filter-btn" data-filter="domestic">国产</button>
-    <button class="filter-btn" data-filter="imported">引进</button>
-    <button class="filter-btn" data-filter="1980s">1980s</button>
-    <button class="filter-btn" data-filter="1990s">1990s</button>
-    <button class="filter-btn" data-filter="2000s">2000s</button>
+
+  <!-- TV Body -->
+  <div class="tv-body">
+    <!-- Screen Bezel -->
+    <div class="tv-screen-bezel">
+      <div class="tv-screen" id="tvScreen">
+        <div class="noise"></div>
+
+        <!-- Channel Switch Overlay -->
+        <div class="channel-switch-overlay" id="channelSwitch"></div>
+
+        <!-- Header -->
+        <header class="header">
+          <div class="title-group">
+            <span class="title-main">80后动画记忆馆</span>
+            <span class="title-sub">1980 → 2000</span>
+          </div>
+          <div class="controls">
+            <input type="text" class="search-box" id="searchInput" placeholder="搜索动画名称或年份...">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="domestic">国产</button>
+            <button class="filter-btn" data-filter="imported">引进</button>
+          </div>
+        </header>
+
+        <!-- Now Playing -->
+        <div class="now-playing" id="nowPlaying">
+          <div class="np-video-container" id="npVideo">
+            <div class="np-placeholder">
+              <span class="np-placeholder-icon">📺</span>
+              <span class="np-placeholder-text">旋转下方旋钮换台</span>
+            </div>
+          </div>
+          <div class="np-info-bar" id="npInfo">
+            <span class="np-channel-num" id="npChannelNum">CH 1</span>
+            <span class="np-title" id="npTitle"></span>
+            <span class="np-year" id="npYear"></span>
+          </div>
+        </div>
+
+        <!-- Footer (inside screen) -->
+        <footer class="footer">
+          <span>📡 <span class="footer-stat" id="totalCount">65</span> 部动画</span>
+          <span class="footer-stat" id="videoCount">20</span> 部可播放
+          <span>1980 — 2000</span>
+        </footer>
+
+        <!-- Hover Preview (fullscreen in TV) -->
+        <div class="hover-preview" id="hoverPreview">
+          <div class="hover-video-wrap" id="hoverVideo"></div>
+          <div class="hover-info-bar" id="hoverInfo"></div>
+        </div>
+
+        <!-- Newspaper Program Guide -->
+        <div class="newspaper" id="newspaper">
+          <div class="newspaper-header">
+            <div class="newspaper-title">📰 少儿节目报</div>
+            <div class="newspaper-date" id="npDate"></div>
+          </div>
+          <div class="newspaper-grid" id="npGrid"></div>
+        </div>
+
+        <!-- Modal (inside TV screen) -->
+        <div class="modal-overlay" id="modalOverlay">
+          <div class="modal" id="modal">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-body" id="modalBody"></div>
+          </div>
+        </div>
+      </div><!-- /tv-screen -->
+    </div><!-- /tv-screen-bezel -->
+
+    <!-- Control Panel -->
+    <div class="tv-control-panel">
+      <div class="tv-knob-wrapper">
+        <div class="tv-knob" id="channelKnob" title="旋转调台">
+          <div class="tv-knob-grip"></div>
+        </div>
+        <span class="tv-knob-label">CH</span>
+        <span class="tv-knob-channel" id="channelDisplay">1</span>
+      </div>
+      <div class="tv-buttons">
+        <div class="tv-btn-group">
+          <div class="tv-small-knob" title="对比度"></div>
+          <span class="tv-btn-label">对比</span>
+        </div>
+        <div class="tv-btn-group">
+          <div class="tv-small-knob" title="亮度"></div>
+          <span class="tv-btn-label">亮度</span>
+        </div>
+        <div class="tv-btn-group">
+          <div class="tv-small-knob" title="色彩"></div>
+          <span class="tv-btn-label">色彩</span>
+        </div>
+        <div class="tv-btn-group">
+          <div class="tv-btn" title="音量+"></div>
+          <span class="tv-btn-label">音量</span>
+        </div>
+      </div>
+      <div class="tv-brand">牡丹牌</div>
+      <div class="tv-speaker" id="tvSpeaker"></div>
+      <div class="tv-power on" id="tvPower"></div>
+    </div>
+  </div><!-- /tv-body -->
+
+  <!-- TV Legs -->
+  <div class="tv-legs">
+    <div class="tv-leg"></div>
+    <div class="tv-leg"></div>
   </div>
-</header>
-
-<!-- Timeline -->
-<div class="timeline-wrapper" id="timeline"></div>
-
-<!-- Nav Dots -->
-<div class="nav-dots" id="navDots"></div>
-
-<!-- Footer -->
-<footer class="footer">
-  <span>共收录 <span class="footer-stat" id="totalCount">0</span> 部经典动画</span>
-  <div class="year-bar" id="yearBar"></div>
-  <span>SINCE 1980 — 2000</span>
-</footer>
-
-<!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modal">
-    <button class="modal-close" id="modalClose">&times;</button>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
-</div>
+</div><!-- /tv-set -->
 
 <script>
 // ============================================================
@@ -766,7 +1349,7 @@ const animations = [
       {name:"天马博士",desc:"阿童木的创造者，因丧子之痛而制造了阿童木，但后来却抛弃了他。内心充满矛盾和悲伤。"},
       {name:"乌兰",desc:"阿童木的机器人妹妹，活泼可爱，虽然能力不如阿童木，但同样拥有一颗善良的心。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Hf4y1w7H7&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:2, year:1980, title:"哪吒闹海", titleEn:"Nezha Conquers the Dragon King", country:"中国", type:"domestic",
     decade:"1980s",
@@ -776,7 +1359,7 @@ const animations = [
       {name:"太乙真人",desc:"乾元山金光洞的神仙，哪吒的师父。法力高强，用莲花莲藕为哪吒重塑身体，赐予他众多法宝。"},
       {name:"李靖",desc:"陈塘关总兵，哪吒的父亲。为人正直但迂腐，在哪吒惹祸后一度要将他交给龙王处置，父子关系紧张。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1c64y1p7hu&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:3, year:1981, title:"大闹天宫", titleEn:"Havoc in Heaven", country:"中国", type:"domestic",
     decade:"1980s",
@@ -786,7 +1369,7 @@ const animations = [
       {name:"玉皇大帝",desc:"天界最高统治者，威严而固执。面对孙悟空的挑战时常常束手无策，只能不断派兵征讨。"},
       {name:"二郎神杨戬",desc:"玉帝的外甥，额头有第三只眼，法力高强。与孙悟空大战三百回合，最终在哮天犬和老君的帮助下擒获悟空。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1dx411H7Hm&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:4, year:1982, title:"森林大帝", titleEn:"Kimba the White Lion", country:"日本", type:"imported",
     decade:"1980s",
@@ -795,7 +1378,7 @@ const animations = [
       {name:"雷欧",desc:"白色的小狮子，潘加之子。勇敢善良，充满正义感，立志成为像父亲一样伟大的森林之王。"},
       {name:"潘加",desc:"雷欧的父亲，前任森林之王。威严而仁慈，为了保护森林中的动物牺牲了自己。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV15S4y1k7dy&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:5, year:1983, title:"聪明的一休", titleEn:"Ikkyu-san", country:"日本", type:"imported",
     decade:"1980s",
@@ -805,7 +1388,7 @@ const animations = [
       {name:"小叶子",desc:"一休的好朋友，天真可爱的小姑娘。常常和一休一起玩耍，也是一休的帮助对象之一。"},
       {name:"长老",desc:"安国寺的住持，慈祥宽容，对一休的聪明机智十分欣赏，但也时常被他弄得哭笑不得。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1YB4y1j7Bq&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:6, year:1984, title:"花仙子", titleEn:"Flower Angel", country:"日本", type:"imported",
     decade:"1980s",
@@ -814,7 +1397,7 @@ const animations = [
       {name:"小蓓",desc:"花仙的后裔，温柔善良的少女。拥有变身能力，胸前佩戴的花钥匙可以打开任何锁。在寻找七色花的旅途中不断成长。"},
       {name:"咪咪",desc:"小蓓的伙伴，一只会说话的白色小猫，性格机灵可爱，常常在小蓓遇到困难时给予陪伴。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV16e4y1P7vf&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:7, year:1984, title:"黑猫警长", titleEn:"Black Cat Sheriff", country:"中国", type:"domestic",
     decade:"1980s",
@@ -824,7 +1407,7 @@ const animations = [
       {name:"白猫班长",desc:"黑猫警长的得力助手，忠诚可靠。虽然后来在战斗中牺牲，但他的英勇让人铭记。"},
       {name:"一只耳",desc:"反派老鼠，被打掉了一只耳朵后成为黑猫警长的死对头，不断制造麻烦。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV17s411a7E7&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:8, year:1984, title:"三毛流浪记", titleEn:"The Adventures of Sanmao", country:"中国", type:"domestic",
     decade:"1980s",
@@ -844,7 +1427,7 @@ const animations = [
       {name:"格格巫",desc:"邪恶的巫师，秃顶大鼻子，总是想方设法抓住蓝精灵来提炼魔法金，但每次都以失败告终。"},
       {name:"聪聪",desc:"戴眼镜的蓝精灵，知识渊博但有些书呆子气，常把简单的事情搞复杂。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1pj411Q7tR&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:10, year:1986, title:"葫芦兄弟", titleEn:"Calabash Brothers", country:"中国", type:"domestic",
     decade:"1980s",
@@ -858,7 +1441,7 @@ const animations = [
       {name:"六娃（蓝）",desc:"会隐身术，来无影去无踪。灵活机敏，是兄弟中的奇兵。"},
       {name:"七娃（紫）",desc:"拥有宝葫芦，能收服万物。后来被蛇精用毒计迷惑，险些害了哥哥们。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV17s411a77a&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:11, year:1986, title:"米老鼠和唐老鸭", titleEn:"Mickey Mouse and Donald Duck", country:"美国", type:"imported",
     decade:"1980s",
@@ -877,7 +1460,7 @@ const animations = [
       {name:"希瑞/阿多拉",desc:"希曼的孪生妹妹，被霍达克掳走后抚养长大。当她发现真相后，举起神剑成为希瑞，为正义而战。"},
       {name:"霍达克",desc:"邪恶军团的领袖，希瑞的主要敌人。曾经是阿多拉的养父，企图统治整个星球。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Y4411D79s&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:13, year:1987, title:"变形金刚", titleEn:"Transformers", country:"美国", type:"imported",
     decade:"1980s",
@@ -888,7 +1471,7 @@ const animations = [
       {name:"大黄蜂",desc:"汽车人侦察兵，变形成黄色甲壳虫。虽然体型小但勇敢忠诚，是人类男孩斯派克最好的朋友。"},
       {name:"红蜘蛛",desc:"霸天虎的空中指挥官，变形成F15战斗机。野心膨胀，总想取代威震天成为霸天虎的领袖。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV14rA2eGE7w&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:14, year:1987, title:"邋遢大王奇遇记", titleEn:"King of the Lazy", country:"中国", type:"domestic",
     decade:"1980s",
@@ -907,7 +1490,7 @@ const animations = [
       {name:"多纳泰罗",desc:"紫眼带，长棍。四龟中的科学家和发明家，聪明绝顶，动手能力极强。"},
       {name:"米开朗基罗",desc:"橙眼带，双截棍。最爱吃披萨的乐天派，幽默搞怪，是团队的开心果。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1MC4y1s7Lu&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:16, year:1988, title:"恐龙特急克塞号", titleEn:"Koseidon", country:"日本", type:"imported",
     decade:"1980s",
@@ -915,7 +1498,7 @@ const animations = [
     characters:[
       {name:"格吾/克塞",desc:"时代战士，通过人间大炮发射变身为克塞战士。勇敢无畏，拥有超强的战斗力，是战胜格德米斯的关键。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Eg4y127qk&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:17, year:1989, title:"舒克和贝塔", titleEn:"Shuke and Beita", country:"中国", type:"domestic",
     decade:"1980s",
@@ -924,7 +1507,7 @@ const animations = [
       {name:"舒克",desc:"开直升机的小老鼠，善良勤劳。不愿意偷东西，立志靠自己的劳动生活。"},
       {name:"贝塔",desc:"开坦克的小老鼠，勇敢坚强。与舒克一见如故，成为生死之交。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Ms4y1k7K1&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:18, year:1989, title:"丹佛最后的恐龙", titleEn:"Denver, the Last Dinosaur", country:"美国", type:"imported",
     decade:"1980s",
@@ -945,7 +1528,7 @@ const animations = [
       {name:"瞬",desc:"仙女座青铜圣斗士。温柔善良的少年，不愿伤人但战力极强。绝技星云锁链。"},
       {name:"一辉",desc:"凤凰座青铜圣斗士。从死亡皇后岛归来的不死鸟，冷酷孤傲但内心深爱着弟弟瞬。绝技凤翼天翔。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1E54y1N7LA&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:20, year:1990, title:"哆啦A梦", titleEn:"Doraemon", country:"日本", type:"imported",
     decade:"1990s",
@@ -957,7 +1540,7 @@ const animations = [
       {name:"刚田武（胖虎）",desc:"班上的小霸王，喜欢欺负大雄。但偶尔也会表现出重情义的一面。唱歌极其难听。"},
       {name:"骨川小夫",desc:"富家子弟，爱炫耀，经常和胖虎一起欺负大雄。但胆子比大雄还小。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1C4411R7jK&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:21, year:1991, title:"足球小将", titleEn:"Captain Tsubasa", country:"日本", type:"imported",
     decade:"1990s",
@@ -1011,7 +1594,7 @@ const animations = [
       {name:"战部渡",desc:"被选召到创界山的小学生，善良勇敢，是龙神丸的驾驶者。面对困难从不退缩。"},
       {name:"施巴拉古大师",desc:"自称剑术大师的搞笑角色，实际上剑法稀松平常，但在关键时刻总能爆发。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV18s411C767&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:27, year:1994, title:"灌篮高手", titleEn:"Slam Dunk", country:"日本", type:"imported",
     decade:"1990s",
@@ -1170,7 +1753,7 @@ const animations = [
       {name:"蛋生",desc:"从天鹅蛋中出生的神奇男孩，活泼机灵。在袁公的教导下学会了天书法术，用法术为民造福。"},
       {name:"袁公",desc:"天庭的神仙，为了将天书传给世人而触犯天规。正直无畏，是蛋生的启蒙老师。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV13PaseFEU6&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:43, year:1992, title:"小龙人", titleEn:"Little Dragon Man", country:"中国", type:"domestic",
     decade:"1990s",
@@ -1187,7 +1770,7 @@ const animations = [
       {name:"阿凡提",desc:"头戴民族小帽、倒骑小毛驴的智者。幽默风趣，总是用出人意料的方式解决难题。"},
       {name:"巴依老爷",desc:"贪婪的地主，总是想占穷人便宜，但每次都被阿凡提巧妙地教训。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1UMXpYnEXB&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:45, year:1991, title:"三个火枪手", titleEn:"The Three Musketeers (Anime)", country:"日本", type:"imported",
     decade:"1990s",
@@ -1264,7 +1847,7 @@ const animations = [
     characters:[
       {name:"烈火（真田良）",desc:"烈火神盔甲的继承者，代表「仁」。热血正义，是五人的核心领袖。"}
     ],
-    videoUrl:""
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1gb411k7y4&page=1&high_quality=1&autoplay=0&t=0"
   },
   { id:54, year:1996, title:"钢铁神兵", titleEn:"B't X", country:"日本", type:"imported",
     decade:"1990s",
@@ -1281,374 +1864,343 @@ const animations = [
       {name:"梅拉德小姐",desc:"世界著名的鸭子侦探，无论走到哪里都会遇到案件。头脑敏锐，推理能力一流，用智慧和勇气揭开真相。"}
     ],
     videoUrl:""
+  },
+  // ── 补充  ──
+  { id:56, year:1987, title:"六神合体", titleEn:"Godmars", country:"日本", type:"imported",
+    decade:"1980s",
+    synopsis:"未来世界，少年明神岳被选中成为地球的守护者。他驾驶着由六架战机合体组成的巨大机器人——六神合体雷霆王，与异星侵略者祖鲁皇帝展开殊死战斗。六架战机分别隐藏在六个秘密基地中，每次召唤时的合体动画是80后最经典的热血画面。",
+    characters:[
+      {name:"明神岳",desc:"六神合体的驾驶员，被选为地球守护者的少年。勇敢坚定，驾驶着六架战机组合成的雷霆王守护和平。"}
+    ],
+    videoUrl:""
+  },
+  { id:57, year:1989, title:"天空战记", titleEn:"The Sky Warriors Shurato", country:"日本", type:"imported",
+    decade:"1980s",
+    synopsis:"高中生日高秋亚人和好友黑木凯在一场武术比赛中，突然被召唤到异世界天界。原来他们是天界的守护战士转世。秋亚人成为修罗王，而凯却被黑暗力量腐蚀成为夜叉王。昔日的挚友成为宿命的敌人，在天界展开了壮绝的战斗。这部动画融合了印度神话和佛教元素，风格独特。",
+    characters:[
+      {name:"日高秋亚人/修罗王",desc:"被召唤到天界的高中生，修罗王的转世。重情重义，为了拯救好友凯而战斗。"},
+      {name:"黑木凯/夜叉王",desc:"秋亚人的好友，被黑暗力量腐蚀成为夜叉王。内心挣扎在友情和黑暗之间。"}
+    ],
+    videoUrl:""
+  },
+  { id:58, year:1985, title:"特种部队", titleEn:"G.I. Joe", country:"美国", type:"imported",
+    decade:"1980s",
+    synopsis:"一支名为特种部队的精英军事小队对抗邪恶的眼镜蛇组织。公爵、红发女郎、面具人、拦路虎等角色各自身怀绝技，与眼镜蛇指挥官、迪斯特罗等反派展开了无穷无尽的战斗。每集结尾都有寓教于乐的安全提示：「现在你知道了吗？知道了！」。",
+    characters:[
+      {name:"公爵",desc:"特种部队的指挥官，金发英俊的完美军人。沉着冷静，战术指挥能力出众。"},
+      {name:"眼镜蛇指挥官",desc:"眼镜蛇组织的首领，永远戴着银色面具。野心勃勃想要统治世界，但每次都被特种部队击败。"}
+    ],
+    videoUrl:""
+  },
+  { id:59, year:1986, title:"神探加杰特", titleEn:"Inspector Gadget", country:"美国", type:"imported",
+    decade:"1980s",
+    synopsis:"加杰特是一个全身装满高科技装置的半机械人警探。他的身体可以弹出各种道具：伸缩手臂、弹射腿、直升机帽子...可惜他本人笨手笨脚，总是被侄女佩妮和她的狗布拉诺在暗中帮助才能破案。邪恶的克劳博士永远戴着金属爪，策划着阴谋。每集结尾那句「哇哦！」让人笑出声。",
+    characters:[
+      {name:"加杰特",desc:"半机械人警探，全身装满道具但总是搞砸。憨厚可爱的性格让人忍俊不禁。"},
+      {name:"佩妮",desc:"加杰特的侄女，真正的破案天才。总在暗中帮叔叔收拾残局，智勇双全。"}
+    ],
+    videoUrl:""
+  },
+  { id:60, year:1984, title:"百变雄狮", titleEn:"Challenge of the GoBots", country:"美国", type:"imported",
+    decade:"1980s",
+    synopsis:"来自戈博特朗星的守护者和叛逆者在星球毁灭后来到地球。守护者领袖里德王带领队伍保护地球，而叛逆者的塞格特则企图征服地球。双方都能变形为各种交通工具。这部动画常被认为是变形金刚的有力竞争者，两者在80年代中期同时风靡全球。",
+    characters:[
+      {name:"里德王",desc:"守护者的领袖，睿智勇敢。变形成战斗机，带领百变雄狮守护地球和平。"},
+      {name:"塞格特",desc:"叛逆者的领袖，野心勃勃。变形成赛车，一直企图征服地球和消灭守护者。"}
+    ],
+    videoUrl:""
+  },
+  { id:61, year:1992, title:"大力水手", titleEn:"Popeye the Sailor Man", country:"美国", type:"imported",
+    decade:"1990s",
+    synopsis:"独眼的水手波派爱着奥利弗，却总是被情敌布鲁托找麻烦。每当波派吃下一罐菠菜，就会变得力大无穷，一拳打飞布鲁托。这部动画让无数中国孩子相信吃菠菜能变强壮。「我是大力水手波派！」和他标志性的烟斗和笑声是永恒的经典。",
+    characters:[
+      {name:"波派",desc:"大力水手，独眼、叼烟斗、前臂粗壮。吃菠菜后力大无穷，永远保护着奥利弗。"},
+      {name:"奥利弗",desc:"波派的女友，瘦高的女孩。虽然经常被布鲁托骚扰，但对波派始终不变。"},
+      {name:"布鲁托",desc:"波派的情敌，大块头恶棍。每次都欺负波派，但菠菜一出就注定要被打飞。"}
+    ],
+    videoUrl:""
+  },
+  { id:62, year:1996, title:"佐罗", titleEn:"The Legend of Zorro (Anime)", country:"日本", type:"imported",
+    decade:"1990s",
+    synopsis:"18世纪末的西班牙殖民地加利福尼亚，贵族青年迪亚哥白天装作软弱无能的纨绔子弟，夜晚则化身为蒙面侠客佐罗，用剑与鞭为受压迫的人民伸张正义。日本动画版佐罗融合了日式热血与西方侠客传奇，那句「我是佐罗！」和用剑划出的Z字让人热血沸腾。",
+    characters:[
+      {name:"迪亚哥/佐罗",desc:"白天是胆小贵族，夜晚化身蒙面侠客。剑术高超，用剑划出Z字符号。为正义而战的不朽英雄。"},
+      {name:"萝莉塔",desc:"迪亚哥的恋人，美丽勇敢的少女。不知道佐罗就是迪亚哥，深深仰慕着神秘的蒙面侠客。"}
+    ],
+    videoUrl:""
+  },
+  { id:63, year:1984, title:"海底小精灵", titleEn:"Snorks", country:"美国", type:"imported",
+    decade:"1980s",
+    synopsis:"在深海的珊瑚礁下生活着一群可爱的小精灵——海底小精灵。他们头顶有通气管，可以喷出气泡。主角奥斯克和朋友们在海底世界展开了各种有趣冒险，同时也要应对一些坏心眼精灵的捣乱。这部动画和蓝精灵同一个制作团队，风格轻松可爱。",
+    characters:[
+      {name:"奥斯克",desc:"黄色海底小精灵，勇敢乐观。头顶的通气管会喷出彩色气泡，总带着朋友们探索海底新世界。"}
+    ],
+    videoUrl:""
+  },
+  { id:64, year:1988, title:"咪咪流浪记", titleEn:"Nobody's Boy: Remi", country:"日本", type:"imported",
+    decade:"1980s",
+    synopsis:"少年雷米被养父卖给了一个流浪艺人。他和老师傅维塔利斯带着三只聪明的狗和一只猴子，在法国各地流浪卖艺。雷米在旅途中经历了无数苦难，也遇到了善良的人们。他真正的身份是一位英国贵族的儿子，最终在历尽艰辛后与生母团聚。这部动画让无数80后流下眼泪。",
+    characters:[
+      {name:"雷米",desc:"被收养又遭遗弃的孤儿少年。坚强乐观，在流浪卖艺的路上寻找真正的家和亲人。"},
+      {name:"维塔利斯",desc:"收留雷米的流浪老艺人。外表严厉内心善良，教给雷米音乐和人生的道理。"}
+    ],
+    videoUrl:""
+  },
+  { id:65, year:1986, title:"小不点乐队", titleEn:"The Littles", country:"美国", type:"imported",
+    decade:"1980s",
+    synopsis:"在人类的房子里，隐藏着一个微型世界。一群只有手指大小的小不点人住在墙后的通道里，他们有自己完整的社会。小不点男孩汤姆经常和他的滑翔机一起冒险，而人类男孩亨利是他们唯一知道秘密的人类朋友。",
+    characters:[
+      {name:"汤姆·小不点",desc:"勇敢的小不点男孩，喜欢冒险。常常滑翔在人类世界中，和人类男孩亨利是好朋友。"}
+    ],
+    videoUrl:""
   }
 ];
 
 // ============================================================
-// Boot Animation
+// Boot Animation — Snow → Welcome → Fade
 // ============================================================
 window.addEventListener('load', () => {
+  const bootSnow = document.getElementById('bootSnow');
+  const bootWelcome = document.getElementById('bootWelcome');
+  const bootLed = document.getElementById('bootLed');
+  const bootChannel = document.getElementById('bootChannel');
+  const bootScreen = document.getElementById('bootScreen');
+
+  // Phase 1: Snow plays for 2s
   setTimeout(() => {
-    document.getElementById('bootScreen').classList.add('hidden');
-  }, 1600);
+    // Phase 2: Snow clears → welcome appears
+    bootSnow.classList.add('clearing');
+    bootWelcome.classList.add('show');
+  }, 2000);
+
+  setTimeout(() => {
+    // Phase 3: LED goes green, channel text shows
+    bootLed.classList.add('on');
+    bootChannel.classList.add('show');
+  }, 2800);
+
+  setTimeout(() => {
+    // Phase 4: Fade out entire boot screen
+    bootScreen.classList.add('hidden');
+  }, 3800);
 });
 
 // ============================================================
 // State
 // ============================================================
-let currentFilter = 'all';
-let currentSearch = '';
 
-// Group animations by era for timeline pages
-function getEraPages(anims) {
-  const groups = [
-    { label: '1980 — 1984', years: [1980,1984], key: 'era-80a' },
-    { label: '1985 — 1989', years: [1985,1989], key: 'era-80b' },
-    { label: '1990 — 1994', years: [1990,1994], key: 'era-90a' },
-    { label: '1995 — 1999', years: [1995,1999], key: 'era-90b' },
-    { label: '2000', years: [2000,2000], key: 'era-00' }
-  ];
-  const pages = [];
-  const valid = filterAnims(anims, currentFilter, currentSearch);
+// ============================================================
+// Channel System — Random Play Mode
+// ============================================================
+const videoAnims = animations.filter(a => a.videoUrl && a.videoUrl.trim());
+let currentAnim = null;
+let channelHistory = [];
 
-  groups.forEach(g => {
-    const members = valid
-      .filter(a => a.year >= g.years[0] && a.year <= g.years[1])
-      .sort((a,b) => a.year - b.year);
-    if (members.length > 0) {
-      pages.push({ ...g, members });
-    }
-  });
+document.getElementById('totalCount').textContent = animations.length;
+document.getElementById('videoCount').textContent = videoAnims.length;
 
-  return pages;
+function pickRandomChannel() {
+  if (videoAnims.length === 0) return null;
+  if (videoAnims.length === 1) return videoAnims[0];
+  const pool = videoAnims.filter(a => a !== currentAnim);
+  if (pool.length === 0) return videoAnims[Math.floor(Math.random() * videoAnims.length)];
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// ============================================================
-// Render Timeline
-// ============================================================
-function renderTimeline() {
-  const wrapper = document.getElementById('timeline');
-  const pages = getEraPages(animations);
-  const isMobile = window.innerWidth <= 768;
+function tuneToChannel(anim, channelNum) {
+  if (!anim) return;
 
-  let html = '';
+  // CRT switch animation
+  const overlay = document.getElementById('channelSwitch');
+  overlay.classList.remove('active');
+  void overlay.offsetWidth;
+  overlay.classList.add('active');
 
-  pages.forEach((page, pi) => {
-    const eraLabel = page.label.includes('—') ? 'ERA' : 'YEAR';
-    html += `<div class="era-page" data-era="${page.key}">`;
-    html += `<div class="era-header">`;
-    html += `<span class="era-year">${page.label}</span>`;
-    html += `<span class="era-label">${eraLabel}</span>`;
-    html += `</div>`;
-    html += `<div class="era-grid">`;
-
-    page.members.forEach(anim => {
-      const typeBadge = anim.type === 'domestic'
-        ? '<span class="badge badge-domestic">国产</span>'
-        : '<span class="badge badge-imported">引进</span>';
-      const countryBadge = `<span class="badge" style="border:1px solid rgba(255,179,71,0.3);color:#a89880;">${anim.country}</span>`;
-      const hue = (anim.id * 47) % 360;
-      const coverGrad = `linear-gradient(135deg, hsl(${hue},30%,12%) 0%, hsl(${hue},45%,18%) 40%, hsl(${(hue+30)%360},25%,8%) 100%)`;
-      const icons = ['📺','🎬','🎨','✨','🌟','💫','🎪','🎭','📡','🔮','🎯','🎵','🎶','🖼️','📼','🌀'];
-      const icon = icons[anim.id % icons.length];
-
-      html += `
-        <div class="card" data-id="${anim.id}" onclick="openModal(${anim.id})">
-          <div class="card-cover" style="--cover-gradient:${coverGrad};">
-            <span class="card-cover-icon">${icon}</span>
-            <span class="card-cover-title">${anim.title}</span>
-            <span class="card-cover-year">◆ ${anim.year}</span>
-          </div>
-          <div class="card-info">
-            <div>
-              <div class="card-title-zh">${anim.title}</div>
-              <div class="card-title-en">${anim.titleEn}</div>
-            </div>
-            <div class="card-badges">${typeBadge}${countryBadge}</div>
-          </div>
-        </div>`;
-    });
-
-    html += `</div></div>`;
-  });
-
-  wrapper.innerHTML = html;
-
-  // Update nav dots
-  renderNavDots(pages.length);
-
-  // Update footer stats
-  updateStats(pages);
-
-  // Show/hide no results
-  const noRes = document.getElementById('noResults');
-  if (pages.length === 0) {
-    if (!noRes) {
-      const div = document.createElement('div');
-      div.id = 'noResults';
-      div.className = 'no-results';
-      div.style.display = 'flex';
-      div.innerHTML = '<span>NO SIGNAL</span><span>没有找到匹配的动画 · 试试其他筛选条件</span>';
-      wrapper.parentNode.insertBefore(div, wrapper.nextSibling);
-    } else {
-      noRes.style.display = 'flex';
-    }
-    wrapper.style.display = 'none';
-  } else {
-    if (noRes) noRes.style.display = 'none';
-    wrapper.style.display = 'flex';
+  // Update video
+  const npVideo = document.getElementById('npVideo');
+  if (anim.videoUrl && anim.videoUrl.trim()) {
+    const autoUrl = anim.videoUrl.replace('autoplay=0', 'autoplay=1');
+    npVideo.innerHTML = '<iframe src="' + autoUrl + '" allowfullscreen allow="autoplay"></iframe>';
   }
 
-  // Scroll to first page
-  wrapper.scrollLeft = 0;
+  // Update info bar
+  document.getElementById('npChannelNum').textContent = 'CH ' + channelNum;
+  document.getElementById('npTitle').textContent = anim.title;
+  document.getElementById('npYear').textContent = anim.year + ' · ' + anim.country;
+
+  // Update control panel channel display
+  document.getElementById('channelDisplay').textContent = channelNum;
+  currentAnim = anim;
+
+  // Show newspaper
+  showNewspaper(anim);
 }
 
-// ============================================================
-// Nav Dots
-// ============================================================
-function renderNavDots(count) {
-  const dots = document.getElementById('navDots');
-  if (count <= 1) { dots.innerHTML = ''; return; }
+function nextRandomChannel() {
+  if (videoAnims.length === 0) return;
+  const next = pickRandomChannel();
+  if (!next) return;
+  channelHistory.push(next);
+  if (channelHistory.length > 99) channelHistory = channelHistory.slice(-50);
+  tuneToChannel(next, channelHistory.length);
+  currentChannel = channelHistory.length;
+}
 
-  let html = '';
-  for (let i = 0; i < count; i++) {
-    html += `<div class="nav-dot${i === 0 ? ' active' : ''}" data-index="${i}"></div>`;
+function prevChannel() {
+  if (channelHistory.length <= 1) {
+    // wrap around
+    nextRandomChannel();
+    return;
   }
-  dots.innerHTML = html;
-
-  // Click handlers
-  dots.querySelectorAll('.nav-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      const idx = parseInt(dot.dataset.index);
-      const pages = document.querySelectorAll('.era-page');
-      if (pages[idx]) {
-        pages[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-      }
-    });
-  });
+  channelHistory.pop();
+  const prev = channelHistory[channelHistory.length - 1];
+  tuneToChannel(prev, channelHistory.length);
+  currentChannel = channelHistory.length;
 }
 
 // ============================================================
-// Track active page on scroll
+// Initialize on load
 // ============================================================
-const timelineEl = document.getElementById('timeline');
-timelineEl.addEventListener('scroll', () => {
-  const pages = document.querySelectorAll('.era-page');
-  const dots = document.querySelectorAll('.nav-dot');
-  if (pages.length === 0 || dots.length === 0) return;
+setTimeout(function() {
+  if (videoAnims.length > 0) {
+    var first = videoAnims[Math.floor(Math.random() * videoAnims.length)];
+    channelHistory = [first];
+    tuneToChannel(first, 1);
+    currentChannel = 1;
+  }
+}, 2800);
 
-  const containerLeft = timelineEl.getBoundingClientRect().left;
-  let activeIdx = 0;
-  let minDist = Infinity;
-
-  pages.forEach((page, i) => {
-    const rect = page.getBoundingClientRect();
-    const dist = Math.abs(rect.left - containerLeft);
-    if (dist < minDist) { minDist = dist; activeIdx = i; }
+// ============================================================
+// Search — find and jump to animation
+// ============================================================
+document.getElementById('searchInput').addEventListener('input', function(e) {
+  var query = e.target.value.trim().toLowerCase();
+  if (!query) return;
+  var match = videoAnims.find(function(a) {
+    return a.title.toLowerCase().indexOf(query) !== -1 ||
+           (a.titleEn && a.titleEn.toLowerCase().indexOf(query) !== -1);
   });
-
-  dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
+  if (match && match !== currentAnim) {
+    channelHistory.push(match);
+    tuneToChannel(match, channelHistory.length);
+    currentChannel = channelHistory.length;
+  }
 });
 
 // ============================================================
-// Keyboard Navigation
+// Filter buttons — filter from videoAnims
 // ============================================================
-document.addEventListener('keydown', (e) => {
+document.querySelectorAll('.filter-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    var filter = btn.dataset.filter;
+    var pool = videoAnims;
+    if (filter === 'domestic') pool = videoAnims.filter(function(a) { return a.type === 'domestic'; });
+    if (filter === 'imported') pool = videoAnims.filter(function(a) { return a.type === 'imported'; });
+    if (pool.length === 0) return;
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    if (pick !== currentAnim) {
+      channelHistory.push(pick);
+      tuneToChannel(pick, channelHistory.length);
+      currentChannel = channelHistory.length;
+    }
+  });
+});
+
+// ============================================================
+// Keyboard — left/right for channel surfing
+// ============================================================
+document.addEventListener('keydown', function(e) {
   if (document.getElementById('modalOverlay').classList.contains('open')) return;
   if (document.activeElement === document.getElementById('searchInput')) return;
-
-  const pages = document.querySelectorAll('.era-page');
-  if (pages.length === 0) return;
-
-  const containerLeft = timelineEl.getBoundingClientRect().left;
-  let currentIdx = 0;
-  let minDist = Infinity;
-  pages.forEach((page, i) => {
-    const dist = Math.abs(page.getBoundingClientRect().left - containerLeft);
-    if (dist < minDist) { minDist = dist; currentIdx = i; }
-  });
-
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
     e.preventDefault();
-    const next = Math.min(currentIdx + 1, pages.length - 1);
-    pages[next].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    nextRandomChannel();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
     e.preventDefault();
-    const prev = Math.max(currentIdx - 1, 0);
-    pages[prev].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    prevChannel();
   }
 });
 
 // ============================================================
-// Search
+// Click video area to open detail modal
 // ============================================================
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  currentSearch = e.target.value.trim().toLowerCase();
-  renderTimeline();
+document.getElementById('nowPlaying').addEventListener('click', function(e) {
+  if (e.target.closest('.np-info-bar')) return;
+  if (currentAnim) {
+    openModal(currentAnim.id);
+  }
 });
 
 // ============================================================
-// Filters
-// ============================================================
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    renderTimeline();
-  });
-});
-
-// ============================================================
-// Filter Logic
-// ============================================================
-function filterAnims(anims, filter, search) {
-  return anims.filter(a => {
-    // Filter
-    if (filter === 'domestic' && a.type !== 'domestic') return false;
-    if (filter === 'imported' && a.type !== 'imported') return false;
-    if (filter === '1980s' && a.decade !== '1980s') return false;
-    if (filter === '1990s' && a.decade !== '1990s') return false;
-    if (filter === '2000s' && a.decade !== '2000s') return false;
-
-    // Search
-    if (search) {
-      const haystack = `${a.title} ${a.titleEn} ${a.year} ${a.country} ${a.synopsis}`.toLowerCase();
-      if (!haystack.includes(search)) return false;
-    }
-
-    return true;
-  });
-}
-
-// ============================================================
-// Footer Stats
-// ============================================================
-function updateStats(pages) {
-  const total = pages.reduce((sum, p) => sum + p.members.length, 0);
-  document.getElementById('totalCount').textContent = total;
-
-  // Year distribution bar
-  const bar = document.getElementById('yearBar');
-  const allDecades = { '1980s': 0, '1990s': 0, '2000s': 0 };
-  pages.forEach(p => {
-    p.members.forEach(a => {
-      if (allDecades.hasOwnProperty(a.decade)) allDecades[a.decade]++;
-    });
-  });
-  const maxCount = Math.max(...Object.values(allDecades), 1);
-  const colors = { '1980s': '#ff8c42', '1990s': '#ffb347', '2000s': '#ffd700' };
-  bar.innerHTML = Object.entries(allDecades).map(([d, c]) => {
-    const w = Math.max((c / maxCount) * 80, 8);
-    return `<span class="year-bar-seg" style="width:${w}px;background:${colors[d]};" title="${d}: ${c}部"></span>`;
-  }).join('');
-}
-
-// ============================================================
-// Modal
+// Modal — Detail view
 // ============================================================
 const modalOverlay = document.getElementById('modalOverlay');
 const modalBody = document.getElementById('modalBody');
 const modalClose = document.getElementById('modalClose');
 
 function openModal(id) {
-  const anim = animations.find(a => a.id === id);
+  const anim = animations.find(function(a) { return a.id === id; });
   if (!anim) return;
 
   const typeLabel = anim.type === 'domestic' ? '国产' : '引进';
   const typeCls = anim.type === 'domestic' ? 'badge-domestic' : 'badge-imported';
 
-  // Characters HTML
   let charsHTML = '';
   if (anim.characters && anim.characters.length > 0) {
-    charsHTML = anim.characters.map(c => `
-      <div class="char-card">
-        <div class="char-name">${c.name}</div>
-        <div class="char-desc">${c.desc}</div>
-      </div>
-    `).join('');
+    charsHTML = anim.characters.map(function(c) {
+      return '<div class="char-card"><div class="char-name">' + c.name + '</div><div class="char-desc">' + c.desc + '</div></div>';
+    }).join('');
   } else {
     charsHTML = '<p style="color:var(--text-dim);">资料收集中...</p>';
   }
 
-  // Video HTML
   let videoHTML = '';
   if (anim.videoUrl && anim.videoUrl.trim()) {
-    videoHTML = `<div class="video-container"><iframe src="${anim.videoUrl}" allowfullscreen allow="autoplay"></iframe></div>`;
+    const autoUrl = anim.videoUrl.replace('autoplay=0','autoplay=1');
+    videoHTML = '<div class="video-container"><iframe src="' + autoUrl + '" allowfullscreen allow="autoplay"></iframe></div>';
   } else {
-    videoHTML = `<div class="video-placeholder">
-      <span>📺 经典片段采集中 · 敬请期待</span>
-    </div>`;
+    videoHTML = '<div class="video-placeholder"><span>📺 经典片段采集中 · 敬请期待</span></div>';
   }
 
-  modalBody.innerHTML = `
-    <div class="modal-title-zh">${anim.title}</div>
-    <div class="modal-title-en">${anim.titleEn}</div>
-    <div class="modal-meta">
-      <span>${anim.year}</span>
-      <span class="badge ${typeCls}" style="font-size:0.7rem;">${typeLabel}</span>
-      <span>${anim.country}</span>
-    </div>
+  modalBody.innerHTML = '<div class="modal-title-zh">' + anim.title + '</div>' +
+    '<div class="modal-title-en">' + anim.titleEn + '</div>' +
+    '<div class="modal-meta"><span>' + anim.year + '</span><span class="badge ' + typeCls + '" style="font-size:0.7rem;">' + typeLabel + '</span><span>' + anim.country + '</span></div>' +
+    '<div class="modal-tabs"><button class="modal-tab" data-pane="video">经典片段</button><button class="modal-tab" data-pane="synopsis">故事简介</button><button class="modal-tab" data-pane="characters">主角介绍</button></div>' +
+    '<div class="modal-pane active" data-pane="video">' + videoHTML + '</div>' +
+    '<div class="modal-pane" data-pane="synopsis"><p>' + anim.synopsis + '</p></div>' +
+    '<div class="modal-pane" data-pane="characters">' + charsHTML + '</div>';
 
-    <div class="modal-tabs">
-      <button class="modal-tab" data-pane="video">经典片段</button>
-      <button class="modal-tab" data-pane="synopsis">故事简介</button>
-      <button class="modal-tab" data-pane="characters">主角介绍</button>
-    </div>
-
-    <div class="modal-pane active" data-pane="video">
-      ${videoHTML}
-    </div>
-    <div class="modal-pane" data-pane="synopsis">
-      <p>${anim.synopsis}</p>
-    </div>
-    <div class="modal-pane" data-pane="characters">
-      ${charsHTML}
-    </div>
-  `;
-
-  // Tab switching
-  modalBody.querySelectorAll('.modal-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+  modalBody.querySelectorAll('.modal-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
       const pane = tab.dataset.pane;
-      modalBody.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-      modalBody.querySelectorAll('.modal-pane').forEach(p => p.classList.remove('active'));
+      modalBody.querySelectorAll('.modal-tab').forEach(function(t) { t.classList.remove('active'); });
+      modalBody.querySelectorAll('.modal-pane').forEach(function(p) { p.classList.remove('active'); });
       tab.classList.add('active');
-      modalBody.querySelector(`.modal-pane[data-pane="${pane}"]`).classList.add('active');
+      modalBody.querySelector('.modal-pane[data-pane="' + pane + '"]').classList.add('active');
     });
   });
 
   modalOverlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
   modalOverlay.classList.remove('open');
-  document.body.style.overflow = '';
   modalBody.innerHTML = '';
 }
 
 modalClose.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e) => {
+modalOverlay.addEventListener('click', function(e) {
   if (e.target === modalOverlay) closeModal();
 });
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
     closeModal();
   }
 });
 
-// ============================================================
-// Initial Render
-// ============================================================
-renderTimeline();
-
-// Re-render on resize (for mobile vs desktop layout switch)
-let resizeTimeout;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(renderTimeline, 250);
-});
+// No resize re-render needed for now-playing mode
 </script>
 </body>
 </html>
