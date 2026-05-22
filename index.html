@@ -59,7 +59,8 @@ body {
    ============================================================ */
 .tv-set {
   position: relative;
-  width: min(80vw, 860px);
+  width: min(95vw, 1100px);
+  height: 95vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -69,7 +70,7 @@ body {
 /* TV Antenna */
 .tv-antenna {
   position: absolute;
-  top: -45px;
+  top: -55px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
@@ -78,7 +79,7 @@ body {
   align-items: center;
 }
 .tv-antenna-pole {
-  width: 5px; height: 30px;
+  width: 6px; height: 38px;
   background: linear-gradient(to bottom, #999, #666);
   border-radius: 2px;
 }
@@ -88,7 +89,7 @@ body {
 }
 .tv-antenna-v::before, .tv-antenna-v::after {
   content: '';
-  width: 4px; height: 60px;
+  width: 5px; height: 72px;
   background: linear-gradient(to bottom, #aaa, #777);
   border-radius: 2px;
   transform-origin: bottom center;
@@ -96,11 +97,11 @@ body {
 .tv-antenna-v::before { transform: rotate(-25deg); }
 .tv-antenna-v::after  { transform: rotate(25deg); }
 .tv-antenna-tip {
-  width: 8px; height: 8px;
+  width: 10px; height: 10px;
   background: #ddd;
   border-radius: 50%;
   margin-top: -3px;
-  box-shadow: 0 0 6px rgba(200,200,255,0.4);
+  box-shadow: 0 0 8px rgba(200,200,255,0.4);
 }
 
 /* TV Main Body */
@@ -113,7 +114,7 @@ body {
     0 0 0 12px #3a2a1c,
     0 12px 60px rgba(0,0,0,0.8),
     inset 0 2px 0 rgba(255,255,255,0.05);
-  padding: 16px 16px 10px;
+  padding: 20px 20px 12px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -137,7 +138,7 @@ body {
 .tv-screen-bezel {
   background: #080808;
   border-radius: 12px 12px 4px 4px;
-  padding: 8px;
+  padding: 10px;
   position: relative;
   z-index: 1;
   box-shadow:
@@ -167,11 +168,11 @@ body {
 
 /* TV Control Panel (below screen) */
 .tv-control-panel {
-  height: 44px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 28px;
   position: relative;
   z-index: 1;
   background: linear-gradient(180deg, rgba(50,40,30,0.6), rgba(30,22,15,0.8));
@@ -192,13 +193,13 @@ body {
   align-items: center;
 }
 .tv-speaker-slot {
-  width: 3px; height: 24px;
+  width: 3px; height: 30px;
   background: #1a1a1a;
   border-radius: 2px;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
 }
 .tv-knob {
-  width: 44px; height: 44px;
+  width: 54px; height: 54px;
   background: radial-gradient(circle at 35% 35%, #666, #222 50%, #0a0a0a 100%);
   border-radius: 50%;
   cursor: grab;
@@ -215,12 +216,12 @@ body {
 .tv-knob::after {
   content: '';
   position: absolute;
-  top: 6px; left: 50%;
+  top: 7px; left: 50%;
   transform: translateX(-50%);
-  width: 4px; height: 10px;
+  width: 5px; height: 13px;
   background: var(--amber);
   border-radius: 2px;
-  box-shadow: 0 0 6px rgba(255,179,71,0.6);
+  box-shadow: 0 0 8px rgba(255,179,71,0.6);
 }
 /* Knob grip ridges */
 .tv-knob-grip {
@@ -235,14 +236,14 @@ body {
 }
 .tv-knob-label {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   color: var(--amber);
   letter-spacing: 3px;
   font-weight: bold;
 }
 .tv-knob-channel {
   font-family: var(--font-pixel);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--green);
   margin-left: 10px;
   text-shadow: 0 0 10px rgba(57,255,20,0.6);
@@ -255,7 +256,7 @@ body {
   align-items: center;
 }
 .tv-btn {
-  width: 18px; height: 14px;
+  width: 22px; height: 16px;
   background: linear-gradient(180deg, #444, #1a1a1a 40%, #000 100%);
   border-radius: 3px 3px 2px 2px;
   border: 1px solid #333;
@@ -282,7 +283,7 @@ body {
 }
 /* Contrast & Brightness knobs */
 .tv-small-knob {
-  width: 16px; height: 16px;
+  width: 20px; height: 20px;
   background: radial-gradient(circle at 35% 35%, #555, #1a1a1a 70%, #000 100%);
   border-radius: 50%;
   cursor: grab;
@@ -292,9 +293,9 @@ body {
 .tv-small-knob::after {
   content: '';
   position: absolute;
-  top: 2px; left: 50%;
+  top: 3px; left: 50%;
   transform: translateX(-50%);
-  width: 2px; height: 5px;
+  width: 2px; height: 6px;
   background: var(--amber);
   border-radius: 1px;
 }
@@ -302,7 +303,7 @@ body {
 /* TV Brand logo */
 .tv-brand {
   font-family: 'KaiTi', 'STKaiti', serif;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: rgba(255,179,71,0.45);
   letter-spacing: 5px;
   text-shadow: 0 0 4px rgba(255,179,71,0.3);
@@ -339,10 +340,10 @@ body {
   z-index: 0;
 }
 .tv-leg {
-  width: 60px; height: 20px;
+  width: 80px; height: 26px;
   background: linear-gradient(180deg, #3a3028, #1a1410);
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.6);
 }
 
 /* ============================================================
@@ -396,7 +397,7 @@ body {
 }
 /* CRT TV frame */
 .boot-tv-frame {
-  width: min(85vw, 600px);
+  width: min(90vw, 780px);
   aspect-ratio: 4/3;
   background: #111;
   border: 8px solid #2a2a2a;
@@ -521,7 +522,7 @@ body {
 }
 .title-main {
   font-family: var(--font-pixel);
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: var(--amber);
   position: relative;
   text-shadow:
@@ -534,7 +535,7 @@ body {
   100% { text-shadow: 3px 0 rgba(255,0,0,0.5), -3px 0 rgba(0,255,255,0.5); }
 }
 .title-sub {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   font-family: var(--font-mono);
   letter-spacing: 2px;
@@ -548,10 +549,10 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--border-glow);
   color: var(--amber);
-  padding: 8px 14px;
+  padding: 9px 16px;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  width: 200px;
+  font-size: 0.9rem;
+  width: 220px;
   border-radius: 2px;
   outline: none;
   transition: border-color 0.3s, box-shadow 0.3s;
