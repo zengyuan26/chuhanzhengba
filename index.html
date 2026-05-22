@@ -3,2205 +3,1103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>80后动画记忆馆</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>80后动画记忆馆 — 放学回家 · 打开电视</title>
 <style>
-/* ============================================================
-   CSS Custom Properties — Amber CRT Theme
-   ============================================================ */
 :root {
-  --bg: #0d0d0d;
-  --surface: rgba(20, 15, 5, 0.85);
-  --amber: #ffb347;
-  --amber-dark: #cc7a1f;
-  --amber-glow: #ff8c00;
-  --green: #39ff14;
-  --text: #f5e6d3;
-  --text-dim: #a89880;
-  --card-bg: rgba(15, 10, 2, 0.9);
-  --border-glow: rgba(255, 179, 71, 0.3);
-  --domestic: #4da6ff;
-  --imported: #ff8c42;
-  --scanline-opacity: 0.06;
+  --amber: #ff9d20;
+  --amber-dim: #8b6018;
+  --green: #2dff0d;
+  --text: #ffe8c8;
+  --text-dim: #998870;
   --font-pixel: 'Press Start 2P', monospace;
-  --font-mono: 'Courier New', 'Source Code Pro', monospace;
-  --page-width: 90%;
+  --font-mono: 'Courier New', monospace;
+  --font-serif: 'Noto Serif SC', 'KaiTi', serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;background:#000;overflow:hidden;height:100%}
+body{height:100vh;overflow:hidden;background:#000;font-family:var(--font-mono);color:var(--text);cursor:none}
+
+#threeCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+
+#tvScreenOverlay{
+  position:fixed;z-index:5;overflow:hidden;background:#000;
+  border-radius:6px;
+  box-shadow:inset 0 0 80px rgba(0,0,0,.85),inset 0 0 0 3px rgba(0,0,0,.6);
+  pointer-events:auto;cursor:default;
+}
+#tvScreenOverlay iframe{
+  position:absolute;top:-42px;left:0;
+  width:100%;height:calc(100% + 84px);border:none;
 }
 
-/* ============================================================
-   Reset & Base
-   ============================================================ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* CRT screen effects — CSS only on video overlay, NOT full screen */
+#crtScanlines{
+  position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:2;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 3px);
+}
+#crtVignette{
+  position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(0,0,0,.15) 55%,rgba(0,0,0,.35) 75%,rgba(0,0,0,.65) 100%);
+}
+#crtNoise{
+  position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:3;opacity:.06;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:noiseAnim .12s steps(3) infinite;
+}
+@keyframes noiseAnim{0%{opacity:.04}33%{opacity:.07}66%{opacity:.03}100%{opacity:.06}}
 
-html {
-  font-size: 16px;
-  background: var(--bg);
-  overflow: hidden;
-  height: 100%;
+#snowOverlay{
+  position:absolute;top:0;right:0;bottom:0;left:0;z-index:10;
+  pointer-events:none;opacity:0;background:#000;
 }
-
-body {
-  font-family: var(--font-mono);
-  color: var(--text);
-  background: linear-gradient(135deg, #4a3720 0%, #6b5240 30%, #5a4030 70%, #3a2818 100%);
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-  -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: unset;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ============================================================
-   CRT TV Set Frame
-   ============================================================ */
-.tv-set {
-  position: relative;
-  width: min(95vw, 1100px);
-  height: 95vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0 auto;
-  padding-top: 8px;
-}
-/* TV Antenna */
-.tv-antenna {
-  position: absolute;
-  top: -55px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.tv-antenna-pole {
-  width: 6px; height: 38px;
-  background: linear-gradient(to bottom, #999, #666);
-  border-radius: 2px;
-}
-.tv-antenna-v {
-  display: flex; gap: 0;
-  position: relative;
-}
-.tv-antenna-v::before, .tv-antenna-v::after {
-  content: '';
-  width: 5px; height: 72px;
-  background: linear-gradient(to bottom, #aaa, #777);
-  border-radius: 2px;
-  transform-origin: bottom center;
-}
-.tv-antenna-v::before { transform: rotate(-25deg); }
-.tv-antenna-v::after  { transform: rotate(25deg); }
-.tv-antenna-tip {
-  width: 10px; height: 10px;
-  background: #ddd;
-  border-radius: 50%;
-  margin-top: -3px;
-  box-shadow: 0 0 8px rgba(200,200,255,0.4);
+#snowOverlay.active{opacity:1;animation:crtSnowBurst .65s steps(8) forwards}
+@keyframes crtSnowBurst{
+  0%{background:#fff;filter:brightness(3.5) contrast(5) blur(3px) saturate(0)}
+  15%{background:#000;filter:brightness(.1) contrast(6) blur(1px) saturate(0)}
+  30%{background:#888;filter:brightness(2.5) contrast(4) blur(5px) saturate(0)}
+  50%{background:#222;filter:brightness(.4) contrast(3) blur(2px) saturate(0)}
+  65%{background:#fff;filter:brightness(1.8) contrast(5) blur(4px) saturate(0)}
+  80%{background:#050505;filter:brightness(.7) contrast(1.8) blur(1px) saturate(0)}
+  100%{background:#000;filter:brightness(1) contrast(1) blur(0) saturate(1);opacity:0}
 }
 
-/* TV Main Body */
-.tv-body {
-  width: 100%;
-  background: linear-gradient(175deg, #8B7355 0%, #6B5340 8%, #5a4535 20%, #4a3528 40%, #5a4030 60%, #4a3528 80%, #3a2a1c 95%, #2a1a10 100%);
-  border-radius: 18px 18px 10px 10px;
-  box-shadow:
-    0 0 0 8px #1a1410,
-    0 0 0 12px #3a2a1c,
-    0 12px 60px rgba(0,0,0,0.8),
-    inset 0 2px 0 rgba(255,255,255,0.05);
-  padding: 20px 20px 12px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  border: 3px solid #1a1008;
+#channelWatermark{
+  position:absolute;top:8px;right:10px;z-index:5;pointer-events:none;
+  font-family:var(--font-pixel);font-size:.5rem;color:rgba(238,153,32,.55);
 }
-/* Wood grain texture on TV body */
-.tv-body::before {
-  content: '';
-  position: absolute;
-  top: 6px; right: 6px; bottom: 6px; left: 6px;
-  border-radius: 15px 15px 4px 4px;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    repeating-linear-gradient(1deg, transparent, transparent 2px, rgba(180,140,80,0.03) 2px, rgba(180,140,80,0.03) 3px),
-    repeating-linear-gradient(92deg, transparent, transparent 8px, rgba(120,80,40,0.04) 8px, rgba(120,80,40,0.04) 10px),
-    repeating-linear-gradient(-1deg, transparent, transparent 12px, rgba(60,30,10,0.06) 12px, rgba(60,30,10,0.06) 14px);
+#screenClock{
+  position:absolute;top:8px;left:10px;z-index:5;pointer-events:none;
+  font-family:var(--font-mono);font-size:.5rem;color:rgba(45,255,13,.55);
+}
+#npInfo{
+  position:absolute;bottom:0;left:0;right:0;z-index:5;pointer-events:none;
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px;background:rgba(5,4,2,.85);
+  font-family:var(--font-pixel);font-size:.48rem;
+}
+.np-ch{color:var(--green)}
+.np-title{color:var(--amber);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-year{color:var(--text-dim);font-size:.4rem;font-family:var(--font-mono)}
+.np-badge{font-size:.38rem;padding:2px 5px;border-radius:2px}
+
+#noSignalOverlay{
+  position:absolute;top:0;right:0;bottom:0;left:0;z-index:8;
+  display:none;align-items:center;justify-content:center;
+  background:#1a1a1a;flex-direction:column;
+}
+#noSignalOverlay.visible{display:flex}
+#testPattern{
+  width:72%;aspect-ratio:4/3;
+  background:linear-gradient(180deg,
+    #bfbfbf 0%,#bfbfbf 4%,#ffff00 4%,#ffff00 11%,
+    #0ff 11%,#0ff 18%,#0f0 18%,#0f0 25%,
+    #f0f 25%,#f0f 32%,#f00 32%,#f00 39%,
+    #00f 39%,#00f 46%,#000 46%,#000 53%,
+    #111 53%,#f0f0f0 61%,#111 66%,#222 80%,#111 100%);
+  border-radius:6px;position:relative;
+  box-shadow:0 0 40px rgba(255,255,255,.06);
+}
+#testPattern::before{
+  content:'';position:absolute;top:55%;left:50%;transform:translate(-50%,-50%);
+  width:55%;height:38%;border:3px solid rgba(255,255,255,.65);border-radius:50%;
+}
+#testPattern::after{
+  content:'';position:absolute;top:55%;left:50%;transform:translate(-50%,-50%);
+  width:5%;height:5%;background:rgba(255,255,255,.5);
 }
 
-/* TV Screen Bezel */
-.tv-screen-bezel {
-  background: #080808;
-  border-radius: 12px 12px 4px 4px;
-  padding: 10px;
-  position: relative;
-  z-index: 1;
-  box-shadow:
-    inset 0 0 60px rgba(0,0,0,0.9),
-    inset 0 0 0 4px rgba(0,0,0,0.5),
-    0 0 0 3px #0d0d0d;
-  overflow: hidden;
-  border: 3px solid #1a1a1a;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+#modalOverlay{
+  position:absolute;top:0;right:0;bottom:0;left:0;z-index:20;
+  background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;transition:opacity .35s;
+}
+#modalOverlay.open{opacity:1;visibility:visible}
+#modalBox{
+  background:#0d0a04;border:2px solid var(--amber);border-radius:6px;
+  width:88%;max-height:80%;overflow-y:auto;
+  box-shadow:0 0 40px rgba(238,153,32,.15);
+  transform:scale(.9);transition:transform .35s;
+}
+#modalOverlay.open #modalBox{transform:scale(1)}
+#modalClose{
+  position:sticky;top:8px;float:right;z-index:5;margin-right:8px;
+  width:30px;height:30px;background:#0d0a04;border:1px solid var(--amber);
+  color:var(--amber);font-size:1rem;cursor:pointer;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+#modalClose:hover{background:var(--amber);color:#000}
+#modalBody{padding:14px 22px 22px;clear:both}
+.modal-title{font-family:var(--font-pixel);font-size:.9rem;color:var(--amber);margin-bottom:2px}
+.modal-meta{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.modal-meta span{font-size:.55rem;padding:2px 7px;border:1px solid rgba(238,153,32,.2);border-radius:2px;color:var(--text-dim)}
+.modal-tabs{display:flex;margin-bottom:12px;border-bottom:1px solid rgba(238,153,32,.15)}
+.modal-tab{padding:7px 14px;font-size:.6rem;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.modal-tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+.modal-pane{display:none;font-size:.7rem;line-height:1.7;color:var(--text)}
+.modal-pane.active{display:block}
+.video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:3px;background:#000}
+.video-wrap iframe{position:absolute;top:-42px;left:0;width:100%;height:calc(100% + 84px);border:none}
+
+#newspaper{
+  position:absolute;bottom:0;left:0;right:0;z-index:15;
+  pointer-events:none;opacity:0;transform:translateY(100%);
+  transition:all .35s;
+  background:linear-gradient(180deg,#f5edd5,#e8dbb8);
+  border-top:4px double #8b7355;padding:10px 14px;max-height:42%;overflow-y:auto;
+  font-family:var(--font-serif);color:#3a2a1a;
+}
+#newspaper.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+.np-header{text-align:center;border-bottom:2px solid #8b7355;padding-bottom:5px;margin-bottom:6px}
+.np-title-text{font-size:.8rem;font-weight:bold;letter-spacing:3px}
+.np-date{font-size:.45rem;color:#8b7355}
+.np-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:2px}
+.np-item{font-size:.5rem;padding:3px 5px;border-bottom:1px dotted #c4a97d;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-item:hover{background:rgba(139,115,85,.15)}
+.np-time{color:#8b7355;font-size:.4rem;margin-right:3px}
+
+#customCursor{
+  position:fixed;pointer-events:none;z-index:999;
+  width:24px;height:24px;
+  border:2px solid rgba(238,153,32,.7);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  transition:width .15s,height .15s,border-color .15s;
+  mix-blend-mode:difference;
+}
+#customCursor.hovering{width:32px;height:32px;border-color:var(--amber);background:rgba(238,153,32,.1)}
+#cursorDot{
+  position:fixed;pointer-events:none;z-index:998;
+  width:4px;height:4px;background:var(--amber);border-radius:50%;
+  transform:translate(-50%,-50%);
 }
 
-/* TV Screen area */
-.tv-screen {
-  width: 100%; flex: 1; min-height: 0;
-  background: #000;
-  border-radius: 8px 8px 2px 2px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow:
-    inset 0 0 80px rgba(0,0,0,0.6),
-    inset 0 0 20px rgba(0,0,0,0.4);
-}
-
-/* TV Control Panel (below screen) */
-.tv-control-panel {
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  position: relative;
-  z-index: 1;
-  background: linear-gradient(180deg, rgba(50,40,30,0.6), rgba(30,22,15,0.8));
-  border-top: 2px solid rgba(255,179,71,0.15);
-  margin: 0 -4px;
-}
-
-/* Channel Knob */
-.tv-knob-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-/* Speaker grille */
-.tv-speaker {
-  display: flex;
-  gap: 3px;
-  align-items: center;
-}
-.tv-speaker-slot {
-  width: 3px; height: 30px;
-  background: #1a1a1a;
-  border-radius: 2px;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
-}
-.tv-knob {
-  width: 54px; height: 54px;
-  background: radial-gradient(circle at 35% 35%, #666, #222 50%, #0a0a0a 100%);
-  border-radius: 50%;
-  cursor: grab;
-  position: relative;
-  box-shadow:
-    0 3px 10px rgba(0,0,0,0.6),
-    0 0 0 2px #1a1a1a,
-    inset 0 2px 2px rgba(255,255,255,0.08);
-  user-select: none;
-  transition: transform 0.08s ease-out;
-  -webkit-user-select: none;
-}
-.tv-knob:active { cursor: grabbing; }
-.tv-knob::after {
-  content: '';
-  position: absolute;
-  top: 7px; left: 50%;
-  transform: translateX(-50%);
-  width: 5px; height: 13px;
-  background: var(--amber);
-  border-radius: 2px;
-  box-shadow: 0 0 8px rgba(255,179,71,0.6);
-}
-/* Knob grip ridges */
-.tv-knob-grip {
-  position: absolute;
-  top: 2px; right: 2px; bottom: 2px; left: 2px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(
-    #333 0deg 8deg,
-    #222 8deg 16deg
-  );
-  opacity: 0.3;
-}
-.tv-knob-label {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--amber);
-  letter-spacing: 3px;
-  font-weight: bold;
-}
-.tv-knob-channel {
-  font-family: var(--font-pixel);
-  font-size: 0.9rem;
-  color: var(--green);
-  margin-left: 10px;
-  text-shadow: 0 0 10px rgba(57,255,20,0.6);
-}
-
-/* Physical button row */
-.tv-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.tv-btn {
-  width: 22px; height: 16px;
-  background: linear-gradient(180deg, #444, #1a1a1a 40%, #000 100%);
-  border-radius: 3px 3px 2px 2px;
-  border: 1px solid #333;
-  box-shadow: 0 2px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-  cursor: pointer;
-  position: relative;
-}
-.tv-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 1px rgba(0,0,0,0.5);
-}
-.tv-btn-label {
-  font-size: 0.4rem;
-  color: rgba(255,179,71,0.35);
-  font-family: var(--font-mono);
-  text-align: center;
-  letter-spacing: 1px;
-}
-.tv-btn-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-/* Contrast & Brightness knobs */
-.tv-small-knob {
-  width: 20px; height: 20px;
-  background: radial-gradient(circle at 35% 35%, #555, #1a1a1a 70%, #000 100%);
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  position: relative;
-}
-.tv-small-knob::after {
-  content: '';
-  position: absolute;
-  top: 3px; left: 50%;
-  transform: translateX(-50%);
-  width: 2px; height: 6px;
-  background: var(--amber);
-  border-radius: 1px;
-}
-
-/* TV Brand logo */
-.tv-brand {
-  font-family: 'KaiTi', 'STKaiti', serif;
-  font-size: 0.95rem;
-  color: rgba(255,179,71,0.45);
-  letter-spacing: 5px;
-  text-shadow: 0 0 4px rgba(255,179,71,0.3);
-  font-weight: bold;
-  background: rgba(0,0,0,0.3);
-  padding: 3px 10px;
-  border-radius: 2px;
-  border: 1px solid rgba(255,179,71,0.12);
-}
-
-/* Power button */
-.tv-power {
-  width: 10px; height: 10px;
-  background: radial-gradient(circle, #600, #300);
-  border-radius: 50%;
-  border: 1px solid #555;
-  box-shadow: 0 0 4px rgba(255,0,0,0.3), inset 0 0 2px rgba(0,0,0,0.5);
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
-}
-.tv-power.on {
-  background: radial-gradient(circle, #0f0, #060);
-  box-shadow: 0 0 8px rgba(0,255,0,0.5), inset 0 0 2px rgba(0,0,0,0.3);
-  border-color: #555;
-}
-
-/* TV Legs */
-.tv-legs {
-  display: flex;
-  justify-content: space-between;
-  width: 65%;
-  margin-top: 0;
-  z-index: 0;
-}
-.tv-leg {
-  width: 80px; height: 26px;
-  background: linear-gradient(180deg, #3a3028, #1a1410);
-  border-radius: 0 0 10px 10px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.6);
-}
-
-/* ============================================================
-   CRT Scanline Overlay (now inside .tv-screen)
-   ============================================================ */
-.tv-screen::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.08) 2px,
-    rgba(0,0,0,0.08) 4px
-  );
-  mix-blend-mode: multiply;
-}
-
-/* CRT vignette */
-.tv-screen::before {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  pointer-events: none;
-  z-index: 9998;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.5) 100%);
-}
-
-/* Noise overlay */
-.noise {
-  position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; z-index: 9997;
-  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-}
-
-/* ============================================================
-   Boot Screen — CRT Snow → Welcome
-   ============================================================ */
-.boot-screen {
-  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10001;
-  background: #000;
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column;
-  transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
-  overflow: hidden;
-}
-.boot-screen.hidden {
-  opacity: 0; visibility: hidden; pointer-events: none;
-}
-/* CRT TV frame */
-.boot-tv-frame {
-  width: min(90vw, 780px);
-  aspect-ratio: 4/3;
-  background: #111;
-  border: 8px solid #2a2a2a;
-  border-radius: 18px;
-  box-shadow:
-    0 0 0 4px #1a1a1a,
-    0 0 0 10px #222,
-    0 0 80px rgba(0,0,0,0.8),
-    inset 0 0 60px rgba(0,0,0,0.5);
-  position: relative;
-  overflow: hidden;
-}
-/* TV screen area */
-.boot-screen-area {
-  position: absolute;
-  top: 20px; right: 20px; bottom: 20px; left: 20px;
-  background: #000;
-  border-radius: 4px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-/* Snow / static layer */
-.boot-snow {
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  background: #000;
-  animation: snowNoise 0.12s steps(3) infinite;
-}
-.boot-snow::before {
-  content: '';
-  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 3px,
-    rgba(255,255,255,0.06) 3px, rgba(255,255,255,0.06) 6px
-  );
-}
-@keyframes snowNoise {
-  0%   { opacity: 0.95; filter: brightness(1.3) contrast(1.5); }
-  33%  { opacity: 0.7; filter: brightness(0.6) contrast(2); }
-  66%  { opacity: 0.9; filter: brightness(0.3) contrast(3); }
-  100% { opacity: 0.85; filter: brightness(1) contrast(1.8); }
-}
-/* Snow clearing transition */
-.boot-snow.clearing {
-  animation: snowClear 1s ease-out forwards;
-}
-@keyframes snowClear {
-  0%   { opacity: 0.9; filter: blur(0px); }
-  50%  { opacity: 0.5; filter: blur(2px); }
-  100% { opacity: 0; filter: blur(8px); }
-}
-/* Welcome text inside screen */
-.boot-welcome {
-  position: absolute;
-  z-index: 2;
-  font-family: var(--font-pixel);
-  font-size: clamp(0.7rem, 3vw, 1.3rem);
-  color: var(--amber);
-  text-shadow: 0 0 30px rgba(255,179,71,0.8), 0 0 60px rgba(255,179,71,0.4);
-  opacity: 0;
-  transform: scale(0.5);
-  text-align: center;
-  line-height: 1.8;
-  pointer-events: none;
-}
-.boot-welcome.show {
-  animation: welcomeIn 0.8s ease-out forwards;
-}
-@keyframes welcomeIn {
-  0%   { opacity: 0; transform: scale(0.5); }
-  60%  { opacity: 1; transform: scale(1.05); }
-  100% { opacity: 1; transform: scale(1); }
-}
-/* Power indicator LED */
-.boot-led {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: #f00;
-  box-shadow: 0 0 8px #f00;
-  position: absolute;
-  bottom: 8px; right: 20px;
-  animation: ledBlink 0.5s ease-in-out 3;
-}
-.boot-led.on { background: #0f0; box-shadow: 0 0 12px #0f0; animation: none; }
-@keyframes ledBlink {
-  0%, 100% { background: #f00; box-shadow: 0 0 8px #f00; }
-  50% { background: #400; box-shadow: none; }
-}
-/* Channel label under TV */
-.boot-channel {
-  margin-top: 20px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--green);
-  letter-spacing: 4px;
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-.boot-channel.show { opacity: 1; }
-
-/* ============================================================
-   Header
-   ============================================================ */
-.header {
-  position: relative;
-  z-index: 10;
-  padding: 5px 14px 3px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
-  border-bottom: 1px solid rgba(255,179,71,0.2);
-  background: rgba(10,8,3,0.95);
-  flex-shrink: 0;
-}
-
-.title-group {
-  display: flex; align-items: center; gap: 14px;
-}
-.title-main {
-  font-family: var(--font-pixel);
-  font-size: 1.4rem;
-  color: var(--amber);
-  position: relative;
-  text-shadow:
-    2px 0 rgba(255,0,0,0.4),
-    -2px 0 rgba(0,255,255,0.4);
-  animation: chromaticShift 4s infinite alternate;
-}
-@keyframes chromaticShift {
-  0% { text-shadow: 2px 0 rgba(255,0,0,0.4), -2px 0 rgba(0,255,255,0.4); }
-  100% { text-shadow: 3px 0 rgba(255,0,0,0.5), -3px 0 rgba(0,255,255,0.5); }
-}
-.title-sub {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  letter-spacing: 2px;
-}
-
-/* Search & filters */
-.controls {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-}
-.search-box {
-  background: var(--card-bg);
-  border: 1px solid var(--border-glow);
-  color: var(--amber);
-  padding: 9px 16px;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  width: 220px;
-  border-radius: 2px;
-  outline: none;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.search-box:focus {
-  border-color: var(--amber);
-  box-shadow: 0 0 12px rgba(255,179,71,0.3);
-}
-.search-box::placeholder { color: rgba(168,152,128,0.5); }
-
-.filter-btn {
-  background: transparent;
-  border: 1px solid var(--border-glow);
-  color: var(--text-dim);
-  padding: 7px 14px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.25s;
-  white-space: nowrap;
-}
-.filter-btn:hover { border-color: var(--amber); color: var(--amber); }
-.filter-btn.active {
-  background: var(--amber);
-  color: #000;
-  border-color: var(--amber);
-  box-shadow: 0 0 15px rgba(255,179,71,0.4);
-}
-
-/* ============================================================
-   Timeline Container — Horizontal Scroll Snap
-   ============================================================ */
-.timeline-wrapper {
-  position: relative;
-  z-index: 5;
-  flex: 1;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-scroll-snap-type: x mandatory;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  display: flex;
-  padding: 8px 0;
-  min-height: 0;
-}
-.timeline-wrapper::-webkit-scrollbar { height: 6px; }
-.timeline-wrapper::-webkit-scrollbar-track { background: #111; }
-.timeline-wrapper::-webkit-scrollbar-thumb {
-  background: var(--amber-dark); border-radius: 3px;
-}
-
-/* Each era page */
-.era-page {
-  min-width: var(--page-width);
-  max-width: var(--page-width);
-  height: 100%;
-  min-height: 0;
-  -webkit-scroll-snap-align: start;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  padding: 0 24px;
-  flex-shrink: 0;
-}
-
-.era-header {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--amber);
-  box-shadow: 0 2px 10px rgba(255,179,71,0.15);
-}
-.era-year {
-  font-family: var(--font-pixel);
-  font-size: 2.2rem;
-  color: var(--amber);
-  text-shadow: 0 0 30px rgba(255,179,71,0.5);
-}
-.era-label {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  letter-spacing: 3px;
-}
-
-/* Card grid within an era page */
-.era-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 14px;
-  flex: 1;
-  min-height: 0;
-}
-
-/* ============================================================
-   Animation Card
-   ============================================================ */
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-glow);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 160px;
-}
-.card::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(255,179,71,0.08), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-.card:hover {
-  transform: translateY(-4px) scale(1.04);
-  border-color: var(--amber);
-  box-shadow: 0 0 30px rgba(255,179,71,0.3), inset 0 0 40px rgba(255,179,71,0.06);
-}
-.card:hover::after { opacity: 1; }
-
-/* Card Cover */
-.card-cover {
-  height: 95px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.card-cover::before {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  background: var(--cover-gradient, linear-gradient(135deg, #2a1a0a 0%, #4a2a10 50%, #1a0a00 100%));
-}
-.card-cover::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
-  mix-blend-mode: multiply;
-}
-.card-cover-title {
-  font-family: var(--font-pixel);
-  font-size: 0.75rem;
-  color: var(--amber);
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  text-shadow: 0 0 20px rgba(255,179,71,0.5), 2px 2px 0 rgba(0,0,0,0.6);
-  padding: 0 10px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.card-cover-icon {
-  position: absolute;
-  top: 8px; right: 10px;
-  font-size: 1.5rem;
-  opacity: 0.25;
-  z-index: 2;
-  filter: blur(0.5px);
-}
-.card-cover-year {
-  position: absolute;
-  bottom: 6px; left: 10px;
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  color: var(--green);
-  z-index: 2;
-  opacity: 0.8;
-}
-
-/* Card info area below cover */
-.card-info {
-  padding: 10px 12px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-.card-title-zh {
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: var(--amber);
-  line-height: 1.3;
-}
-.card-title-en {
-  font-size: 0.6rem;
-  color: var(--text-dim);
-  margin-top: 2px;
-  font-style: italic;
-}
-.card-badges {
-  display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap;
-  margin-top: 6px;
-}
-.badge {
-  font-size: 0.55rem;
-  padding: 2px 7px;
-  border-radius: 2px;
-  font-family: var(--font-mono);
-  letter-spacing: 1px;
-}
-.badge-domestic { background: rgba(77,166,255,0.2); color: var(--domestic); border: 1px solid rgba(77,166,255,0.3); }
-.badge-imported { background: rgba(255,140,66,0.2); color: var(--imported); border: 1px solid rgba(255,140,66,0.3); }
-
-/* ============================================================
-   Navigation Dots
-   ============================================================ */
-.nav-dots {
-  display: none;
-}
-.nav-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: rgba(255,179,71,0.25);
-  border: 1px solid rgba(255,179,71,0.4);
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.nav-dot.active {
-  background: var(--amber);
-  box-shadow: 0 0 12px var(--amber-glow);
-  transform: scale(1.3);
-}
-.nav-dot:hover { border-color: var(--amber); }
-
-.nav-arrows { display: none; }
-.nav-arrow { display: none; }
-
-/* ============================================================
-   Footer
-   ============================================================ */
-.footer {
-  position: relative;
-  z-index: 10;
-  padding: 4px 16px;
-  background: rgba(10,8,3,0.95);
-  border-top: 1px solid rgba(255,179,71,0.2);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.55rem;
-  color: var(--text-dim);
-  flex-shrink: 0;
-}
-.footer-stat { color: var(--amber); }
-
-.year-bar {
-  display: flex; gap: 3px; align-items: center;
-}
-.year-bar-seg {
-  height: 4px; border-radius: 2px;
-  transition: width 0.5s;
-}
-
-/* ============================================================
-   Modal / Detail Overlay
-   ============================================================ */
-.modal-overlay {
-  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 100;
-  background: rgba(0,0,0,0.88);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; visibility: hidden;
-  transition: opacity 0.35s, visibility 0.35s;
-}
-.modal-overlay.open { opacity: 1; visibility: visible; }
-
-.modal {
-  background: #0f0b05;
-  border: 2px solid var(--amber);
-  border-radius: 6px;
-  width: 90vw;
-  max-width: 800px;
-  max-height: 85vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow:
-    0 0 60px rgba(255,179,71,0.2),
-    0 0 120px rgba(255,179,71,0.08),
-    inset 0 0 60px rgba(255,179,71,0.03);
-  transform: scale(0.9);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.modal-overlay.open .modal { transform: scale(1); }
-
-.modal-close {
-  position: sticky;
-  top: 12px;
-  float: right;
-  z-index: 10;
-  width: 36px; height: 36px;
-  background: var(--card-bg);
-  border: 1px solid var(--amber);
-  color: var(--amber);
-  font-size: 1.2rem;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s;
-  margin-right: 12px;
-}
-.modal-close:hover {
-  background: var(--amber);
-  color: #000;
-  box-shadow: 0 0 20px rgba(255,179,71,0.5);
-}
-
-.modal-body { padding: 20px 30px 30px; clear: both; }
-
-.modal-title-zh {
-  font-family: var(--font-pixel);
-  font-size: 1.2rem;
-  color: var(--amber);
-  text-shadow: 0 0 20px rgba(255,179,71,0.4);
-  margin-bottom: 4px;
-}
-.modal-title-en {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  font-style: italic;
-  margin-bottom: 4px;
-}
-.modal-meta {
-  display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
-}
-.modal-meta span {
-  font-size: 0.7rem;
-  padding: 3px 10px;
-  border: 1px solid var(--border-glow);
-  border-radius: 2px;
-  color: var(--text-dim);
-}
-
-/* Tabs */
-.modal-tabs {
-  display: flex; gap: 0; margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255,179,71,0.2);
-}
-.modal-tab {
-  padding: 10px 22px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.modal-tab.active {
-  color: var(--amber);
-  border-bottom-color: var(--amber);
-}
-.modal-tab:hover { color: var(--amber); }
-
-.modal-pane { display: none; }
-.modal-pane.active { display: block; }
-
-.modal-pane h3 {
-  font-family: var(--font-pixel);
-  font-size: 0.7rem;
-  color: var(--amber);
-  margin-bottom: 12px;
-  letter-spacing: 2px;
-}
-.modal-pane p {
-  font-size: 0.85rem;
-  line-height: 1.8;
-  color: var(--text);
-  text-align: justify;
-}
-
-/* Character cards */
-.char-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-glow);
-  border-radius: 4px;
-  padding: 14px;
-  margin-bottom: 12px;
-}
-.char-name {
-  font-size: 0.95rem;
-  color: var(--amber);
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-.char-desc {
-  font-size: 0.8rem;
-  color: var(--text);
-  line-height: 1.6;
-}
-
-/* Video pane */
-.video-container {
-  position: relative;
-  padding-bottom: 56.25%;
-  height: 0;
-  overflow: hidden;
-  border-radius: 4px;
-  border: 1px solid var(--border-glow);
-  background: #000;
-}
-.video-container iframe {
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-.video-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  border: 1px dashed var(--border-glow);
-  border-radius: 4px;
-}
-
-/* ============================================================
-   Hover Preview — Fullscreen inside TV
-   ============================================================ */
-.hover-preview {
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  z-index: 80;
-  pointer-events: none;
-  opacity: 0;
-  background: rgba(0,0,0,0.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3%;
-  transition: opacity 0.35s ease-out;
-  gap: 12px;
-}
-.hover-preview.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-.hover-video-wrap {
-  width: 90%;
-  flex: 1;
-  max-height: 65%;
-  min-height: 40vh;
-  background: #000;
-  border: 2px solid var(--amber);
-  border-radius: 4px;
-  box-shadow: 0 0 40px rgba(255,179,71,0.3);
-  overflow: hidden;
-  position: relative;
-}
-.hover-video-wrap iframe {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  border: none;
-}
-.hover-info-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-family: var(--font-pixel);
-  font-size: 0.8rem;
-  color: var(--amber);
-  text-shadow: 0 0 12px rgba(255,179,71,0.5);
-  flex-shrink: 0;
-  padding: 8px 0;
-}
-.hover-info-bar .badge {
-  font-size: 0.6rem;
-  padding: 3px 10px;
-  border-radius: 2px;
-  font-family: var(--font-mono);
-  letter-spacing: 1px;
-}
-
-/* ============================================================
-   Newspaper / Program Guide
-   ============================================================ */
-.newspaper {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  z-index: 85;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(100%);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(180deg, #f5edd5, #e8dbb8);
-  border-top: 4px double #8b7355;
-  padding: 14px 20px;
-  max-height: 40%;
-  overflow-y: auto;
-  font-family: 'KaiTi', 'STKaiti', 'SimSun', serif;
-  color: #3a2a1a;
-}
-.newspaper.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-.newspaper-header {
-  text-align: center;
-  border-bottom: 2px solid #8b7355;
-  padding-bottom: 8px;
-  margin-bottom: 10px;
-}
-.newspaper-title {
-  font-size: 1rem;
-  font-weight: bold;
-  letter-spacing: 4px;
-  color: #3a2a1a;
-}
-.newspaper-date {
-  font-size: 0.6rem;
-  color: #8b7355;
-  margin-top: 2px;
-}
-.newspaper-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 6px;
-}
-.newspaper-item {
-  font-size: 0.65rem;
-  padding: 5px 8px;
-  border-bottom: 1px dotted #c4a97d;
-  cursor: pointer;
-  transition: background 0.2s;
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.newspaper-item:hover {
-  background: rgba(139,115,85,0.15);
-}
-.newspaper-item .np-time {
-  color: #8b7355;
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  margin-right: 4px;
-}
-.newspaper-item .np-title {
-  color: #3a2a1a;
-}
-
-/* ============================================================
-   No results
-   ============================================================ */
-.no-results {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 40vh;
-  color: var(--text-dim);
-  font-family: var(--font-pixel);
-  font-size: 0.8rem;
-  gap: 12px;
-  text-align: center;
-}
-
-/* ============================================================
-   Responsive
-   ============================================================ */
-@media (max-width: 1024px) {
-  :root { --page-width: 88%; }
-  .era-grid { grid-template-columns: repeat(3, 1fr); }
-  .title-main { font-size: 1rem; }
-  .era-year { font-size: 1.8rem; }
-}
-
-@media (max-width: 768px) {
-  :root { --page-width: 100vw; }
-  .header { padding: 12px 16px; }
-  .title-main { font-size: 0.8rem; }
-  .timeline-wrapper {
-    height: auto;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-scroll-snap-type: y mandatory;
-    scroll-snap-type: y mandatory;
-    flex-direction: column;
-    padding: 10px 0;
-  }
-  .era-page {
-    min-width: 100%;
-    max-width: 100%;
-    scroll-snap-align: start;
-    padding: 0 16px;
-    margin-bottom: 20px;
-  }
-  .era-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
-  .nav-dots, .nav-arrows { display: none; }
-  .search-box { width: 120px; }
-  .filter-btn { padding: 5px 10px; font-size: 0.65rem; }
-  .modal { width: 95vw; max-height: 90vh; }
-  .era-year { font-size: 1.4rem; }
-}
-
-/* ============================================================
-   Channel Switch Transition
-   ============================================================ */
-.channel-switch-overlay {
-  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 70;
-  pointer-events: none;
-  opacity: 0;
-  background: #000;
-  transition: opacity 0.05s;
-}
-.channel-switch-overlay.active {
-  animation: channelSwitch 0.3s steps(1) forwards;
-}
-@keyframes channelSwitch {
-  0%   { background: #fff; opacity: 1; filter: brightness(5) contrast(5) blur(3px); }
-  15%  { background: #000; opacity: 0.85; filter: brightness(0.1) contrast(5) blur(0px); }
-  35%  { background: #fff; opacity: 0.5; filter: brightness(3) contrast(3) blur(1px); }
-  60%  { background: #111; opacity: 0.15; filter: brightness(1.2) contrast(1.5) blur(0px); }
-  100% { background: #000; opacity: 0; filter: brightness(1) contrast(1) blur(0px); }
-}
-
-/* CRT screen flicker — subtle */
-@keyframes flicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.97; }
-}
-.tv-screen { animation: flicker 8s infinite; }
+#bootOverlay{
+  position:fixed;top:0;right:0;bottom:0;left:0;z-index:1000;
+  background:#000;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;transition:opacity .8s;
+}
+#bootOverlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.boot-text{
+  font-family:var(--font-pixel);font-size:1.2rem;color:var(--amber);
+  opacity:0;transform:scale(.5);transition:all .8s;
+}
+.boot-text.show{opacity:1;transform:scale(1)}
+.boot-sub{font-size:.55rem;color:var(--green);margin-top:14px;opacity:0;transition:opacity .5s}
+.boot-sub.show{opacity:1}
 </style>
 </head>
 <body>
 
-<!-- Boot Screen (covers everything during startup) -->
-<div class="boot-screen" id="bootScreen">
-  <div class="boot-tv-frame">
-    <div class="boot-screen-area">
-      <div class="boot-snow" id="bootSnow"></div>
-      <div class="boot-welcome" id="bootWelcome">欢迎来到<br>80 年 代</div>
-    </div>
-    <div class="boot-led" id="bootLed"></div>
-  </div>
-  <div class="boot-channel" id="bootChannel">CHANNEL 80s · 信号已接入</div>
+<canvas id="threeCanvas"></canvas>
+
+<div id="customCursor"></div>
+<div id="cursorDot"></div>
+
+<div id="bootOverlay">
+  <div class="boot-text" id="bootText">欢 迎 来 到<br>八 十 年 代</div>
+  <div class="boot-sub" id="bootSub">CHANNEL 80s · 童年记忆已接通</div>
 </div>
 
-<!-- ============================================================ -->
-<!-- CRT TV Set -->
-<!-- ============================================================ -->
-<div class="tv-set" id="tvSet">
-  <!-- Antenna -->
-  <div class="tv-antenna">
-    <div class="tv-antenna-tip"></div>
-    <div class="tv-antenna-v"></div>
-    <div class="tv-antenna-pole"></div>
+<div id="tvScreenOverlay">
+  <div id="crtNoise"></div>
+  <div id="crtVignette"></div>
+  <div id="crtScanlines"></div>
+  <div id="snowOverlay"></div>
+  <div id="channelWatermark">80s TV</div>
+  <div id="screenClock"></div>
+  <div id="npVideo" style="position:absolute;top:0;right:0;bottom:0;left:0;">
+    <div style="position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:center;color:rgba(255,232,200,.4);font-family:var(--font-mono);font-size:.7rem;pointer-events:none;">旋转旋钮换台</div>
   </div>
-
-  <!-- TV Body -->
-  <div class="tv-body">
-    <!-- Screen Bezel -->
-    <div class="tv-screen-bezel">
-      <div class="tv-screen" id="tvScreen">
-        <div class="noise"></div>
-
-        <!-- Channel Switch Overlay -->
-        <div class="channel-switch-overlay" id="channelSwitch"></div>
-
-        <!-- Header -->
-        <header class="header">
-          <div class="title-group">
-            <span class="title-main">80后动画记忆馆</span>
-            <span class="title-sub">1980 → 2000</span>
-          </div>
-          <div class="controls">
-            <input type="text" class="search-box" id="searchInput" placeholder="搜索动画名称或年份...">
-            <button class="filter-btn active" data-filter="all">全部</button>
-            <button class="filter-btn" data-filter="domestic">国产</button>
-            <button class="filter-btn" data-filter="imported">引进</button>
-          </div>
-        </header>
-
-        <!-- Now Playing -->
-        <div class="now-playing" id="nowPlaying">
-          <div class="np-video-container" id="npVideo">
-            <div class="np-placeholder">
-              <span class="np-placeholder-icon">📺</span>
-              <span class="np-placeholder-text">旋转下方旋钮换台</span>
-            </div>
-          </div>
-          <div class="np-info-bar" id="npInfo">
-            <span class="np-channel-num" id="npChannelNum">CH 1</span>
-            <span class="np-title" id="npTitle"></span>
-            <span class="np-year" id="npYear"></span>
-          </div>
-        </div>
-
-        <!-- Footer (inside screen) -->
-        <footer class="footer">
-          <span>📡 <span class="footer-stat" id="totalCount">65</span> 部动画</span>
-          <span class="footer-stat" id="videoCount">20</span> 部可播放
-          <span>1980 — 2000</span>
-        </footer>
-
-        <!-- Hover Preview (fullscreen in TV) -->
-        <div class="hover-preview" id="hoverPreview">
-          <div class="hover-video-wrap" id="hoverVideo"></div>
-          <div class="hover-info-bar" id="hoverInfo"></div>
-        </div>
-
-        <!-- Newspaper Program Guide -->
-        <div class="newspaper" id="newspaper">
-          <div class="newspaper-header">
-            <div class="newspaper-title">📰 少儿节目报</div>
-            <div class="newspaper-date" id="npDate"></div>
-          </div>
-          <div class="newspaper-grid" id="npGrid"></div>
-        </div>
-
-        <!-- Modal (inside TV screen) -->
-        <div class="modal-overlay" id="modalOverlay">
-          <div class="modal" id="modal">
-            <button class="modal-close" id="modalClose">&times;</button>
-            <div class="modal-body" id="modalBody"></div>
-          </div>
-        </div>
-      </div><!-- /tv-screen -->
-    </div><!-- /tv-screen-bezel -->
-
-    <!-- Control Panel -->
-    <div class="tv-control-panel">
-      <div class="tv-knob-wrapper">
-        <div class="tv-knob" id="channelKnob" title="旋转调台">
-          <div class="tv-knob-grip"></div>
-        </div>
-        <span class="tv-knob-label">CH</span>
-        <span class="tv-knob-channel" id="channelDisplay">1</span>
-      </div>
-      <div class="tv-buttons">
-        <div class="tv-btn-group">
-          <div class="tv-small-knob" title="对比度"></div>
-          <span class="tv-btn-label">对比</span>
-        </div>
-        <div class="tv-btn-group">
-          <div class="tv-small-knob" title="亮度"></div>
-          <span class="tv-btn-label">亮度</span>
-        </div>
-        <div class="tv-btn-group">
-          <div class="tv-small-knob" title="色彩"></div>
-          <span class="tv-btn-label">色彩</span>
-        </div>
-        <div class="tv-btn-group">
-          <div class="tv-btn" title="音量+"></div>
-          <span class="tv-btn-label">音量</span>
-        </div>
-      </div>
-      <div class="tv-brand">牡丹牌</div>
-      <div class="tv-speaker" id="tvSpeaker"></div>
-      <div class="tv-power on" id="tvPower"></div>
+  <div id="npPreload" style="position:absolute;top:0;right:0;bottom:0;left:0;visibility:hidden;pointer-events:none;"></div>
+  <div id="npInfo">
+    <span class="np-ch" id="npChannelNum">CH 2</span>
+    <span class="np-title" id="npTitle"></span>
+    <span class="np-year" id="npYear"></span>
+    <span class="np-badge" id="npBadge"></span>
+  </div>
+  <div id="noSignalOverlay"><div id="testPattern"></div></div>
+  <div id="modalOverlay">
+    <div id="modalBox">
+      <button id="modalClose">&times;</button>
+      <div id="modalBody"></div>
     </div>
-  </div><!-- /tv-body -->
-
-  <!-- TV Legs -->
-  <div class="tv-legs">
-    <div class="tv-leg"></div>
-    <div class="tv-leg"></div>
   </div>
-</div><!-- /tv-set -->
+  <div id="newspaper">
+    <div class="np-header">
+      <div class="np-title-text">📰 下周节目预告</div>
+      <div class="np-date" id="npDate">1990年6月1日 儿童节特辑</div>
+    </div>
+    <div class="np-grid" id="npGrid"></div>
+  </div>
+</div>
 
-<script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
 // ============================================================
-// Animation Data — 50+ entries
+// THREE.JS SCENE SETUP
+// ============================================================
+const canvas = document.getElementById('threeCanvas');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.LinearToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#1a1008');
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 20);
+camera.position.set(0, 0.9, 2.8);
+camera.lookAt(0, -0.1, 0);
+
+// ============================================================
+// LIGHTING
+// ============================================================
+const hemiLight = new THREE.HemisphereLight('#ffe8d0', '#4a3828', 2.5);
+scene.add(hemiLight);
+
+const ambient = new THREE.AmbientLight('#ffffff', 1.8);
+scene.add(ambient);
+
+const ceilingLight = new THREE.PointLight('#fff5e0', 80, 8, 0.5);
+ceilingLight.position.set(0, 2.3, 0.8);
+scene.add(ceilingLight);
+
+const tvGlow = new THREE.PointLight('#ff9d20', 30, 5, 0.5);
+tvGlow.position.set(0, 0.25, 1.15);
+scene.add(tvGlow);
+
+const fillLight = new THREE.PointLight('#ffe0c0', 15, 4, 0.8);
+fillLight.position.set(1.8, 0.6, 2.2);
+scene.add(fillLight);
+
+// ============================================================
+// ROOM GEOMETRY — Phong materials, no shadows
+// ============================================================
+const roomGroup = new THREE.Group();
+scene.add(roomGroup);
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(5, 5),
+  new THREE.MeshPhongMaterial({color:'#6b4c3a', specular:'#111111', shininess:5})
+);
+floor.rotation.x = -Math.PI/2;
+floor.position.y = -1.2;
+roomGroup.add(floor);
+
+const wallMat = new THREE.MeshPhongMaterial({color:'#f5ecd7', specular:'#000000', shininess:0});
+const backWall = new THREE.Mesh(new THREE.PlaneGeometry(5, 3.5), wallMat);
+backWall.position.set(0, 0.55, -2.5);
+roomGroup.add(backWall);
+
+const sideWallMat = new THREE.MeshPhongMaterial({color:'#ede4d0', specular:'#000000', shininess:0});
+const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(5, 3.5), sideWallMat);
+leftWall.position.set(-2.5, 0.55, 0);
+leftWall.rotation.y = Math.PI/2;
+roomGroup.add(leftWall);
+
+const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(5, 3.5), sideWallMat);
+rightWall.position.set(2.5, 0.55, 0);
+rightWall.rotation.y = -Math.PI/2;
+roomGroup.add(rightWall);
+
+const ceiling = new THREE.Mesh(
+  new THREE.PlaneGeometry(5, 5),
+  new THREE.MeshPhongMaterial({color:'#faf7f0', specular:'#000000', shininess:0})
+);
+ceiling.position.set(0, 2.3, 0);
+ceiling.rotation.x = Math.PI/2;
+roomGroup.add(ceiling);
+
+const wainscot = new THREE.Mesh(
+  new THREE.BoxGeometry(5, 1.2, 0.02),
+  new THREE.MeshPhongMaterial({color:'#7a9a82', specular:'#111111', shininess:3})
+);
+wainscot.position.set(0, -0.6, -2.49);
+roomGroup.add(wainscot);
+
+const baseboard = new THREE.Mesh(
+  new THREE.BoxGeometry(5, 0.06, 0.03),
+  new THREE.MeshPhongMaterial({color:'#3a2818', specular:'#000000', shininess:0})
+);
+baseboard.position.set(0, -0.55, -2.49);
+roomGroup.add(baseboard);
+
+// ============================================================
+// TV CABINET
+// ============================================================
+const cabinetGroup = new THREE.Group();
+cabinetGroup.position.set(0, -0.85, 1.3);
+scene.add(cabinetGroup);
+
+const cabinet = new THREE.Mesh(
+  new THREE.BoxGeometry(1.6, 0.35, 0.5),
+  new THREE.MeshPhongMaterial({color:'#6B5340', specular:'#222222', shininess:10})
+);
+cabinet.position.y = -0.175;
+cabinetGroup.add(cabinet);
+
+const cabinetTop = new THREE.Mesh(
+  new THREE.BoxGeometry(1.62, 0.02, 0.52),
+  new THREE.MeshPhongMaterial({color:'#8B7355', specular:'#444444', shininess:20})
+);
+cabinetTop.position.y = 0.01;
+cabinetGroup.add(cabinetTop);
+
+for (let lx of [-0.65, 0.65]) {
+  const leg = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03, 0.04, 0.3, 8),
+    new THREE.MeshPhongMaterial({color:'#3a2a18', specular:'#111111', shininess:5})
+  );
+  leg.position.set(lx, -0.48, 0.18);
+  cabinetGroup.add(leg);
+  const leg2 = leg.clone();
+  leg2.position.z = -0.18;
+  cabinetGroup.add(leg2);
+}
+
+// ============================================================
+// CRT TV MODEL
+// ============================================================
+const tvGroup = new THREE.Group();
+tvGroup.position.set(0, -0.28, 1.38);
+scene.add(tvGroup);
+
+const tvBody = new THREE.Mesh(
+  new THREE.BoxGeometry(1.1, 0.78, 0.55),
+  new THREE.MeshPhongMaterial({color:'#5c4535', specular:'#222222', shininess:15})
+);
+tvGroup.add(tvBody);
+
+const frontPanel = new THREE.Mesh(
+  new THREE.BoxGeometry(1.06, 0.74, 0.02),
+  new THREE.MeshPhongMaterial({color:'#1a1410', specular:'#333333', shininess:25})
+);
+frontPanel.position.z = 0.275;
+tvGroup.add(frontPanel);
+
+const bezelOuter = new THREE.Mesh(
+  new THREE.BoxGeometry(0.82, 0.64, 0.04),
+  new THREE.MeshPhongMaterial({color:'#0a0a0a', specular:'#444444', shininess:30})
+);
+bezelOuter.position.z = 0.28;
+tvGroup.add(bezelOuter);
+
+// Screen — emissive gives Bloom source
+const screenMat = new THREE.MeshPhongMaterial({
+  color:'#000000', emissive:'#ff9d20', emissiveIntensity:0.5,
+  specular:'#000000', shininess:0
+});
+const tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.54), screenMat);
+tvScreen.position.z = 0.302;
+tvScreen.name = 'tvScreen';
+tvGroup.add(tvScreen);
+
+const controlPanel = new THREE.Mesh(
+  new THREE.BoxGeometry(1.08, 0.09, 0.03),
+  new THREE.MeshPhongMaterial({color:'#0d0a06', specular:'#444444', shininess:20})
+);
+controlPanel.position.set(0, -0.37, 0.275);
+tvGroup.add(controlPanel);
+
+// ── Knob ──
+const knobGroup = new THREE.Group();
+knobGroup.position.set(-0.32, -0.38, 0.3);
+knobGroup.name = 'knobGroup';
+tvGroup.add(knobGroup);
+
+const knobBase = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.07, 0.075, 0.04, 32),
+  new THREE.MeshPhongMaterial({color:'#1a1a1a', specular:'#888888', shininess:40})
+);
+knobGroup.add(knobBase);
+
+const knobGrip = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.06, 0.065, 0.05, 24),
+  new THREE.MeshPhongMaterial({color:'#333333', specular:'#999999', shininess:50})
+);
+knobGrip.position.z = 0.025;
+knobGrip.name = 'knobGrip';
+knobGroup.add(knobGrip);
+
+const knobIndicator = new THREE.Mesh(
+  new THREE.BoxGeometry(0.01, 0.025, 0.01),
+  new THREE.MeshPhongMaterial({color:'#ff9d20', emissive:'#ff9d20', emissiveIntensity:1.5,
+    specular:'#000000', shininess:0})
+);
+knobIndicator.position.set(0, 0.055, 0.028);
+knobGroup.add(knobIndicator);
+
+const chLabel = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.06, 0.03),
+  new THREE.MeshBasicMaterial({color:'#ff9d20'})
+);
+chLabel.position.set(-0.42, -0.38, 0.31);
+tvGroup.add(chLabel);
+
+const powerLed = new THREE.Mesh(
+  new THREE.SphereGeometry(0.018, 8, 8),
+  new THREE.MeshPhongMaterial({color:'#00ff00', emissive:'#00ff00', emissiveIntensity:3,
+    specular:'#000000', shininess:0})
+);
+powerLed.position.set(0.52, -0.37, 0.29);
+powerLed.name = 'powerLed';
+tvGroup.add(powerLed);
+
+const brandLabel = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.1, 0.03),
+  new THREE.MeshBasicMaterial({color:'#ff9d20', transparent:true, opacity:0.35})
+);
+brandLabel.position.set(0, -0.38, 0.31);
+tvGroup.add(brandLabel);
+
+// ── Antenna ──
+const antennaGroup = new THREE.Group();
+antennaGroup.position.set(0, 0.42, 0);
+tvGroup.add(antennaGroup);
+
+const poleMat = new THREE.MeshPhongMaterial({color:'#999999', specular:'#cccccc', shininess:60});
+const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.18, 8), poleMat);
+pole.position.y = 0.09;
+antennaGroup.add(pole);
+
+for (let angle of [-0.45, 0.45]) {
+  const rodGroup = new THREE.Group();
+  rodGroup.position.y = 0.18;
+  rodGroup.rotation.z = angle;
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.25, 8), poleMat);
+  rod.position.y = 0.1;
+  rodGroup.add(rod);
+  antennaGroup.add(rodGroup);
+  const tip = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 8, 8),
+    new THREE.MeshPhongMaterial({color:'#dddddd', specular:'#ffffff', shininess:80,
+      emissive:'#444444', emissiveIntensity:0.3})
+  );
+  tip.position.y = 0.23;
+  rodGroup.add(tip);
+}
+
+// ── TV legs ──
+for (let lx of [-0.18, 0.18]) {
+  const leg = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.06, 0.1),
+    new THREE.MeshPhongMaterial({color:'#3a3028', specular:'#111111', shininess:5})
+  );
+  leg.position.set(lx, -0.43, 0.08);
+  tvGroup.add(leg);
+}
+
+// ============================================================
+// POST-PROCESSING — Bloom only (phosphor glow)
+// CRT scanline/noise/vignette are CSS-only on the DOM overlay
+// ============================================================
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  1.0, 0.5, 0.35
+);
+bloomPass.renderToScreen = true;
+composer.addPass(bloomPass);
+
+// ============================================================
+// SCREEN OVERLAY POSITIONING
+// ============================================================
+const tvScreenOverlay = document.getElementById('tvScreenOverlay');
+
+function updateScreenOverlay() {
+  const screenCenter = new THREE.Vector3(0, 0, 0.302);
+  tvGroup.localToWorld(screenCenter);
+  const screenTop = new THREE.Vector3(0, 0.27, 0.302);
+  tvGroup.localToWorld(screenTop);
+
+  screenCenter.project(camera);
+  screenTop.project(camera);
+
+  const cx = (screenCenter.x * 0.5 + 0.5) * window.innerWidth;
+  const cy = (-screenCenter.y * 0.5 + 0.5) * window.innerHeight;
+  const ty = (-screenTop.y * 0.5 + 0.5) * window.innerHeight;
+
+  const screenH = Math.abs(ty - cy) * 2.0;
+  const screenW = screenH * (4.0 / 3.0);
+
+  tvScreenOverlay.style.left = (cx - screenW/2) + 'px';
+  tvScreenOverlay.style.top = (cy - screenH/2) + 'px';
+  tvScreenOverlay.style.width = screenW + 'px';
+  tvScreenOverlay.style.height = screenH + 'px';
+}
+
+// ============================================================
+// ANIMATION DATA
 // ============================================================
 const animations = [
-  // ── 1980 ──
-  { id:1, year:1980, title:"铁臂阿童木", titleEn:"Astro Boy", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"天马博士的儿子因车祸去世，悲痛之下创造了机器人阿童木。阿童木拥有10万马力的力量和善良的心灵，在茶水博士的帮助下，他开始了与邪恶势力斗争、保护人类的旅程。这是中国引进的第一部日本电视动画，开启了中日动画交流的大门。",
-    characters:[
-      {name:"阿童木",desc:"拥有10万马力、7种超能力的机器人少年。纯真善良，勇敢无畏，是人类与机器人之间的桥梁。脚底装有喷射引擎，手指可发射激光。"},
-      {name:"茶水博士",desc:"科学省长官，阿童木的创造者和监护人。温和睿智，像父亲一样关爱着阿童木，常常为他修理身体并给予人生指导。"},
-      {name:"天马博士",desc:"阿童木的创造者，因丧子之痛而制造了阿童木，但后来却抛弃了他。内心充满矛盾和悲伤。"},
-      {name:"乌兰",desc:"阿童木的机器人妹妹，活泼可爱，虽然能力不如阿童木，但同样拥有一颗善良的心。"}
-    ],
+  { id:1, year:1980, title:"铁臂阿童木", titleEn:"Astro Boy", country:"日本", type:"imported", era:"80年代",
+    synopsis:"天马博士的儿子因车祸去世，悲痛之下创造了机器人阿童木。阿童木拥有10万马力的力量和善良的心灵，在茶水博士的帮助下，开始了与邪恶势力斗争、保护人类的旅程。这是中国引进的第一部日本电视动画。",
+    characters:[{name:"阿童木",desc:"拥有10万马力、7种超能力的机器人少年。"},{name:"茶水博士",desc:"科学省长官，阿童木的创造者和监护人。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Hf4y1w7H7&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:2, year:1980, title:"哪吒闹海", titleEn:"Nezha Conquers the Dragon King", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"陈塘关总兵李靖的夫人怀胎三年零六个月，生下一个肉球，从中跳出一个男孩，太乙真人收他为徒，取名哪吒。哪吒在海边玩耍时与东海龙王之子发生冲突，将其杀死。龙王大怒，水淹陈塘关。哪吒为了不连累百姓，悲愤自刎。太乙真人用莲花莲藕为哪吒重塑身体，哪吒复活后大闹龙宫，为民除害。",
-    characters:[
-      {name:"哪吒",desc:"灵珠子转世，脚踩风火轮，手持乾坤圈、混天绫，三头六臂。性格刚烈正直，不畏强权，是中国神话中最具反抗精神的少年英雄。"},
-      {name:"太乙真人",desc:"乾元山金光洞的神仙，哪吒的师父。法力高强，用莲花莲藕为哪吒重塑身体，赐予他众多法宝。"},
-      {name:"李靖",desc:"陈塘关总兵，哪吒的父亲。为人正直但迂腐，在哪吒惹祸后一度要将他交给龙王处置，父子关系紧张。"}
-    ],
+  { id:2, year:1980, title:"哪吒闹海", titleEn:"Nezha Conquers the Dragon King", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"陈塘关总兵李靖的夫人怀胎三年零六个月，生下一个肉球，从中跳出一个男孩。太乙真人收他为徒，取名哪吒。哪吒大闹龙宫，为不连累百姓而悲愤自刎，后被太乙真人用莲花莲藕重塑身体。",
+    characters:[{name:"哪吒",desc:"脚踩风火轮，手持乾坤圈、混天绫。中国神话中最具反抗精神的少年英雄。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV1c64y1p7hu&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:3, year:1981, title:"大闹天宫", titleEn:"Havoc in Heaven", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"孙悟空在花果山自立为齐天大圣，玉帝震怒，派天兵天将征讨。孙悟空大败巨灵神、哪吒，又偷吃蟠桃、盗取仙丹、扰乱蟠桃会。最终玉帝请来二郎神，在老君的金刚琢和哮天犬的帮助下才将孙悟空擒获。但孙悟空在八卦炉中炼就火眼金睛，打破天门，重返花果山。这部万氏兄弟的杰作是中国动画史上的巅峰。",
-    characters:[
-      {name:"孙悟空",desc:"花果山美猴王，神通广大，桀骜不驯。拥有七十二变、筋斗云等本领，手中金箍棒重一万三千五百斤，可大可小。"},
-      {name:"玉皇大帝",desc:"天界最高统治者，威严而固执。面对孙悟空的挑战时常常束手无策，只能不断派兵征讨。"},
-      {name:"二郎神杨戬",desc:"玉帝的外甥，额头有第三只眼，法力高强。与孙悟空大战三百回合，最终在哮天犬和老君的帮助下擒获悟空。"}
-    ],
+  { id:3, year:1981, title:"大闹天宫", titleEn:"Havoc in Heaven", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"孙悟空在花果山自立为齐天大圣，大败巨灵神、哪吒，偷吃蟠桃、盗取仙丹。最终被二郎神擒获，但悟空在八卦炉中炼就火眼金睛，打破天门。万氏兄弟的杰作，中国动画史上的巅峰。",
+    characters:[{name:"孙悟空",desc:"花果山美猴王，神通广大，金箍棒重一万三千五百斤。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV1dx411H7Hm&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:4, year:1982, title:"森林大帝", titleEn:"Kimba the White Lion", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"白狮雷欧是森林之王潘加的儿子，在父亲被猎人杀害后，他立志继承父亲的遗志，成为守护森林和平的新一代森林大帝。雷欧凭借勇气和智慧，团结森林中的动物们，共同对抗人类的入侵和自然界的挑战。动画传递了保护自然、尊重生命的深刻主题。",
-    characters:[
-      {name:"雷欧",desc:"白色的小狮子，潘加之子。勇敢善良，充满正义感，立志成为像父亲一样伟大的森林之王。"},
-      {name:"潘加",desc:"雷欧的父亲，前任森林之王。威严而仁慈，为了保护森林中的动物牺牲了自己。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV15S4y1k7dy&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:5, year:1983, title:"聪明的一休", titleEn:"Ikkyu-san", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"一休是日本室町时代安国寺的小和尚，幼名千菊丸。他聪明过人，善于用智慧和幽默解决各种难题。每当遇到困难时，一休就会盘腿打坐、用手指在头上画圈，然后灵机一动想出妙计。动画以轻松诙谐的方式讲述了一休帮助穷苦百姓、教训贪婪权贵的故事，充满了哲理与童趣。",
-    characters:[
-      {name:"一休",desc:"安国寺的小和尚，聪明绝顶。每当思考问题时会盘腿打坐，用手指在头顶画圈。善良正直，常常帮助弱小。"},
-      {name:"小叶子",desc:"一休的好朋友，天真可爱的小姑娘。常常和一休一起玩耍，也是一休的帮助对象之一。"},
-      {name:"长老",desc:"安国寺的住持，慈祥宽容，对一休的聪明机智十分欣赏，但也时常被他弄得哭笑不得。"}
-    ],
+  { id:4, year:1983, title:"聪明的一休", titleEn:"Ikkyu-san", country:"日本", type:"imported", era:"80年代",
+    synopsis:"一休是日本室町时代安国寺的小和尚，聪明过人。每当遇到困难时，一休就会盘腿打坐、用手指在头上画圈，然后灵机一动想出妙计。动画充满了哲理与童趣。",
+    characters:[{name:"一休",desc:"安国寺小和尚，聪明绝顶。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV1YB4y1j7Bq&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:6, year:1984, title:"花仙子", titleEn:"Flower Angel", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"少女小蓓继承了花仙的血统，为了寻找能带来幸福的七色花，她带着会说话的猫和狗踏上了旅程。一路上她遇到了各种人和事，用花仙之力和真诚的心帮助他人。动画以欧洲为背景，画面唯美浪漫，是80年代无数少女心中的经典。",
-    characters:[
-      {name:"小蓓",desc:"花仙的后裔，温柔善良的少女。拥有变身能力，胸前佩戴的花钥匙可以打开任何锁。在寻找七色花的旅途中不断成长。"},
-      {name:"咪咪",desc:"小蓓的伙伴，一只会说话的白色小猫，性格机灵可爱，常常在小蓓遇到困难时给予陪伴。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV16e4y1P7vf&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:7, year:1984, title:"黑猫警长", titleEn:"Black Cat Sheriff", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"黑猫警长是森林公安局的警长，率领白猫班长等警员维护森林治安。他与一只耳老鼠斗智斗勇，破获了偷粮案、食猴鹰案、吃红土案等多个重大案件。虽然仅有5集，但每一集都精彩绝伦，黑猫警长的正义形象深入人心。「啊哈，我就是黑猫警长！」成为一代人的记忆。",
-    characters:[
-      {name:"黑猫警长",desc:"森林公安局的警长，身穿黑色警服，头戴大盖帽。机智勇敢、执法严明，是森林秩序的守护者。"},
-      {name:"白猫班长",desc:"黑猫警长的得力助手，忠诚可靠。虽然后来在战斗中牺牲，但他的英勇让人铭记。"},
-      {name:"一只耳",desc:"反派老鼠，被打掉了一只耳朵后成为黑猫警长的死对头，不断制造麻烦。"}
-    ],
+  { id:5, year:1984, title:"黑猫警长", titleEn:"Black Cat Sheriff", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"黑猫警长是森林公安局的警长，率领白猫班长维护森林治安。他与一只耳老鼠斗智斗勇，破获偷粮案、食猴鹰案等重大案件。虽然仅有5集，但每一集都精彩绝伦。",
+    characters:[{name:"黑猫警长",desc:"身穿黑色警服，机智勇敢、执法严明。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV17s411a7E7&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:8, year:1984, title:"三毛流浪记", titleEn:"The Adventures of Sanmao", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"三毛是一个生活在旧上海的流浪儿，因为头上只有三根头发而得名。他无家可归，在上海滩流浪求生，经历了无数的苦难与屈辱，但也遇到了许多善良的人。动画改编自张乐平的经典漫画，以悲喜剧的手法展现了旧社会底层儿童的生存状态。",
-    characters:[
-      {name:"三毛",desc:"头上只有三根头发的流浪少年，瘦小机灵，虽然生活贫困但保持着善良纯真的心。他的遭遇让人心酸又感动。"}
-    ],
-    videoUrl:""
-  },
-  // ── 1985-1989 ──
-  { id:9, year:1985, title:"蓝精灵", titleEn:"The Smurfs", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"在森林深处的蘑菇小屋里，住着一群蓝色的小精灵。他们有爸爸蓝爸爸、爱美的蓝妹妹、爱抱怨的厌厌、聪明的聪聪等。邪恶的巫师格格巫和他的猫阿兹猫总是想抓住蓝精灵，但蓝精灵们每次都能用智慧和团结化解危机。啦啦啦的歌声传遍了全世界。",
-    characters:[
-      {name:"蓝爸爸",desc:"蓝精灵们的领袖和父亲，红帽子红裤子，是唯一穿红色衣服的蓝精灵。智慧慈祥，总能在关键时刻拯救大家。"},
-      {name:"蓝妹妹",desc:"蓝精灵中唯一的女性，金色长发，美丽善良，是格格巫用泥土制造出来却被蓝爸爸用魔法变好的。"},
-      {name:"格格巫",desc:"邪恶的巫师，秃顶大鼻子，总是想方设法抓住蓝精灵来提炼魔法金，但每次都以失败告终。"},
-      {name:"聪聪",desc:"戴眼镜的蓝精灵，知识渊博但有些书呆子气，常把简单的事情搞复杂。"}
-    ],
+  { id:6, year:1985, title:"蓝精灵", titleEn:"The Smurfs", country:"美国", type:"imported", era:"80年代",
+    synopsis:"在森林深处的蘑菇小屋里，住着一群蓝色的小精灵。蓝爸爸、蓝妹妹、聪聪等。邪恶的格格巫总想抓住蓝精灵，但蓝精灵们每次都能用智慧和团结化解危机。",
+    characters:[{name:"蓝爸爸",desc:"蓝精灵的领袖，智慧慈祥。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV1pj411Q7tR&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:10, year:1986, title:"葫芦兄弟", titleEn:"Calabash Brothers", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"一位老爷爷种下了一颗神奇的葫芦种子，长出了红橙黄绿青蓝紫七个葫芦。葫芦成熟后跳出七个本领各异的兄弟：大娃力大无穷、二娃千里眼顺风耳、三娃钢筋铁骨、四娃喷火、五娃吐水、六娃隐身、七娃的宝葫芦能收万物。他们为救出被蛇精和蝎子精抓走的老爷爷，团结一心大战妖精。",
-    characters:[
-      {name:"大娃（红）",desc:"力大无穷，能变大变小。性格憨厚直率，是七兄弟中的大哥。"},
-      {name:"二娃（橙）",desc:"拥有千里眼和顺风耳，能看穿一切、听清远方。是兄弟中的侦察兵。"},
-      {name:"三娃（黄）",desc:"钢筋铁骨，刀枪不入。性格刚强，是兄弟中的战斗先锋。"},
-      {name:"四娃（绿）",desc:"能喷出熊熊烈火，性格火爆直爽。"},
-      {name:"五娃（青）",desc:"能吐出滔滔洪水，性格温和但实力强大。"},
-      {name:"六娃（蓝）",desc:"会隐身术，来无影去无踪。灵活机敏，是兄弟中的奇兵。"},
-      {name:"七娃（紫）",desc:"拥有宝葫芦，能收服万物。后来被蛇精用毒计迷惑，险些害了哥哥们。"}
-    ],
+  { id:7, year:1986, title:"葫芦兄弟", titleEn:"Calabash Brothers", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"老爷爷种下神奇葫芦种子，跳出七个本领各异的兄弟。为救出被蛇精和蝎子精抓走的老爷爷，七兄弟团结一心大战妖精。「葫芦娃，葫芦娃，一根藤上七朵花」是每个80后的童年记忆。",
+    characters:[{name:"大娃（红）",desc:"力大无穷，能变大变小。"},{name:"七娃（紫）",desc:"宝葫芦能收万物。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV17s411a77a&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:11, year:1986, title:"米老鼠和唐老鸭", titleEn:"Mickey Mouse and Donald Duck", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"迪士尼的经典动画系列，讲述了米奇、唐老鸭、高飞等角色妙趣横生的日常生活。米奇聪明乐观，唐老鸭脾气火爆却心地善良，高飞憨厚可爱。他们一起经历了无数令人捧腹的冒险，是全世界最受欢迎的卡通形象。1986年在央视播出后引发轰动。",
-    characters:[
-      {name:"米奇",desc:"乐观开朗的小老鼠，迪士尼的当家明星。善良聪明，总是能在困难中找到解决办法。"},
-      {name:"唐老鸭",desc:"脾气火爆但心地善良的鸭子。说话含糊不清，常常因为急躁而陷入麻烦，但他的真诚让人喜爱。"},
-      {name:"高飞",desc:"米奇的好朋友，一条憨厚的大狗。虽然笨手笨脚，但永远充满热情和忠诚。"}
-    ],
-    videoUrl:""
-  },
-  { id:12, year:1986, title:"非凡的公主希瑞", titleEn:"She-Ra: Princess of Power", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"亚当王子举起神剑喊出「辉克显灵」，变身为宇宙巨人希曼。而他的妹妹阿多拉举起另一把神剑喊出「赐予我力量吧！我是希瑞！」，便变身为非凡的公主希瑞。希瑞带领反抗军与霍达克的邪恶帝国作战，保护以希利亚星。",
-    characters:[
-      {name:"希瑞/阿多拉",desc:"希曼的孪生妹妹，被霍达克掳走后抚养长大。当她发现真相后，举起神剑成为希瑞，为正义而战。"},
-      {name:"霍达克",desc:"邪恶军团的领袖，希瑞的主要敌人。曾经是阿多拉的养父，企图统治整个星球。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Y4411D79s&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:13, year:1987, title:"变形金刚", titleEn:"Transformers", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"汽车人和霸天虎在赛博坦星球上进行了数百万年的战争，能源耗尽后来到地球。汽车人以擎天柱为首，保护人类；霸天虎以威震天为首，企图掠夺地球资源。双方都能变形成各种交通工具和武器，在地球上展开了激烈的战斗。「汽车人，变形出发！」成为最经典的台词。",
-    characters:[
-      {name:"擎天柱",desc:"汽车人领袖，变形成红色卡车头。正直、勇敢、无私，是正义的化身。他的名言「自由是每个生命体的权利」令人动容。"},
-      {name:"威震天",desc:"霸天虎领袖，变形成手枪。野心勃勃，冷酷无情，一心想征服宇宙。与擎天柱是宿命的对手。"},
-      {name:"大黄蜂",desc:"汽车人侦察兵，变形成黄色甲壳虫。虽然体型小但勇敢忠诚，是人类男孩斯派克最好的朋友。"},
-      {name:"红蜘蛛",desc:"霸天虎的空中指挥官，变形成F15战斗机。野心膨胀，总想取代威震天成为霸天虎的领袖。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV14rA2eGE7w&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:14, year:1987, title:"邋遢大王奇遇记", titleEn:"King of the Lazy", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"一个不讲卫生、邋里邋遢的小男孩被一只老鼠带入了地下老鼠王国。老鼠国王企图用他来研制细菌武器。邋遢大王在老鼠王国里经历了一系列惊险奇遇，最终利用自己的智慧和小伙伴们的帮助逃出生天，也从此改掉了邋遢的坏毛病。",
-    characters:[
-      {name:"邋遢大王",desc:"一个不爱干净的小男孩，头发乱糟糟，衣服脏兮兮。被老鼠骗到地下王国后，在危险中逐渐成长，最终改掉了坏习惯。"}
-    ],
-    videoUrl:""
-  },
-  { id:15, year:1988, title:"忍者神龟", titleEn:"Teenage Mutant Ninja Turtles", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"四只普通的宠物龟被神秘液体变异后，在纽约下水道中被老鼠师父斯普林特养大，并传授了忍术。莱昂纳多、拉斐尔、多纳泰罗、米开朗基罗四只忍者龟与邪恶的施莱德和脚族忍者展开了永不停歇的战斗。他们爱吃披萨，爱说俏皮话，是80年代末最酷的动画。",
-    characters:[
-      {name:"莱昂纳多",desc:"蓝眼带，双刀。四龟中的领袖，冷静沉着，武艺精湛，遵守武士道精神。"},
-      {name:"拉斐尔",desc:"红眼带，双叉。脾气火爆但重情重义，战斗时勇猛无畏，有时会与莱昂纳多发生争执。"},
-      {name:"多纳泰罗",desc:"紫眼带，长棍。四龟中的科学家和发明家，聪明绝顶，动手能力极强。"},
-      {name:"米开朗基罗",desc:"橙眼带，双截棍。最爱吃披萨的乐天派，幽默搞怪，是团队的开心果。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1MC4y1s7Lu&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:16, year:1988, title:"恐龙特急克塞号", titleEn:"Koseidon", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"来自未来世界的时代战士，为了对抗入侵地球的格德米斯星人，乘坐克塞号穿梭于白垩纪时代。主人公格吾通过人间大炮发射后变身为克塞战士，与外星侵略者和恐龙时代的危险展开战斗。「人间大炮，一级准备！二级准备！发射！」是80后最燃的口号。",
-    characters:[
-      {name:"格吾/克塞",desc:"时代战士，通过人间大炮发射变身为克塞战士。勇敢无畏，拥有超强的战斗力，是战胜格德米斯的关键。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Eg4y127qk&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:17, year:1989, title:"舒克和贝塔", titleEn:"Shuke and Beita", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"两只小老鼠舒克和贝塔不愿意像其他老鼠一样偷东西过日子。舒克开着直升机，贝塔开着坦克，他们成为了最好的朋友。他们一起创办了航空公司，帮助小动物们，还和海盗鼠展开战斗。他们证明了出身不能决定一个人的价值，重要的是你选择成为什么样的人。",
-    characters:[
-      {name:"舒克",desc:"开直升机的小老鼠，善良勤劳。不愿意偷东西，立志靠自己的劳动生活。"},
-      {name:"贝塔",desc:"开坦克的小老鼠，勇敢坚强。与舒克一见如故，成为生死之交。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Ms4y1k7K1&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:18, year:1989, title:"丹佛最后的恐龙", titleEn:"Denver, the Last Dinosaur", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"一群加州少年在海滩发现了一颗神秘的恐龙蛋，蛋中孵化出了地球上最后一只恐龙——丹佛。丹佛可爱温顺，喜欢摇滚乐和滑板。少年们一边保护丹佛不被别有用心的人发现，一边和丹佛一起展开了许多有趣的冒险。",
-    characters:[
-      {name:"丹佛",desc:"地球上最后一只恐龙，可爱的绿色小恐龙。喜欢摇滚乐，会用滑板，天真无邪，是人类最好的朋友。"}
-    ],
-    videoUrl:""
-  },
-  // ── 1990-1994 ──
-  { id:19, year:1990, title:"圣斗士星矢", titleEn:"Saint Seiya", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"希腊神话背景下的现代故事。雅典娜的圣斗士们穿着代表88个星座的圣衣，为了保护大地和女神雅典娜而战。星矢、紫龙、冰河、瞬、一辉五位青铜圣斗士历经黄金十二宫、北欧仙宫、海皇波塞冬、冥王哈迪斯等无数战斗。「燃烧吧，我的小宇宙！」激励了整整一代人。",
-    characters:[
-      {name:"星矢",desc:"天马座青铜圣斗士。永不言弃的热血少年，无论倒下多少次都会重新站起。招牌绝技天马流星拳。"},
-      {name:"紫龙",desc:"天龙座青铜圣斗士。中国庐山五老峰的传人，沉着冷静，重情重义。绝技庐山升龙霸。"},
-      {name:"冰河",desc:"白鸟座青铜圣斗士。在西伯利亚修行的冷酷美少年，内心深处有着对母亲的温柔思念。绝技钻石星尘拳。"},
-      {name:"瞬",desc:"仙女座青铜圣斗士。温柔善良的少年，不愿伤人但战力极强。绝技星云锁链。"},
-      {name:"一辉",desc:"凤凰座青铜圣斗士。从死亡皇后岛归来的不死鸟，冷酷孤傲但内心深爱着弟弟瞬。绝技凤翼天翔。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1E54y1N7LA&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:20, year:1990, title:"哆啦A梦", titleEn:"Doraemon", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"来自22世纪的猫型机器人哆啦A梦受主人野比世修的委托，回到20世纪帮助他的曾祖父——一个名叫野比大雄的笨拙小学生。哆啦A梦的四次元口袋里装满了各种神奇的未来道具：任意门、竹蜻蜓、时光机、记忆面包...但大雄每次都会因为贪心或粗心把事情搞砸。",
-    characters:[
-      {name:"哆啦A梦",desc:"来自22世纪的猫型机器人，怕老鼠。四次元口袋中有无数神奇道具，是大雄最可靠的伙伴。"},
-      {name:"野比大雄",desc:"成绩垫底、体育也不行的小学生。虽然懦弱但心地善良，在哆啦A梦的帮助下渐渐成长。"},
-      {name:"源静香",desc:"大雄暗恋的同班同学，聪明温柔，喜欢音乐和洗澡。是大家心中的女神。"},
-      {name:"刚田武（胖虎）",desc:"班上的小霸王，喜欢欺负大雄。但偶尔也会表现出重情义的一面。唱歌极其难听。"},
-      {name:"骨川小夫",desc:"富家子弟，爱炫耀，经常和胖虎一起欺负大雄。但胆子比大雄还小。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1C4411R7jK&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:21, year:1991, title:"足球小将", titleEn:"Captain Tsubasa", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"大空翼从小热爱足球，梦想成为世界第一的足球运动员。他加入了南葛小学足球队，和若林源三、岬太郎等伙伴一起征战全国大赛，之后更走向世界舞台。这部动画在日本和中国都掀起了足球热潮，无数孩子因为大空翼而爱上了足球。",
-    characters:[
-      {name:"大空翼",desc:"天才足球少年，技术全面，意志坚强。把足球当作最好的朋友，梦想带领日本队夺得世界杯。"},
-      {name:"若林源三",desc:"天才守门员，大空翼最初的对手和后来的队友。以成为世界第一门将为目标。"},
-      {name:"岬太郎",desc:"大空翼的最佳搭档，技术细腻，两人联手组成的黄金搭档无人能敌。"}
-    ],
-    videoUrl:""
-  },
-  { id:22, year:1991, title:"猫和老鼠", titleEn:"Tom and Jerry", country:"美国", type:"imported",
-    decade:"1990s",
-    synopsis:"汤姆猫和杰瑞鼠是一对永远在斗智斗勇的冤家。汤姆想尽办法要抓住杰瑞，而杰瑞每次都能凭借机智和运气反败为胜。尽管他们整天打打闹闹，但在关键时刻又会相互帮助。这部几乎无对白的动画凭借精湛的动画制作和完美的喜剧节奏征服了全世界。",
-    characters:[
-      {name:"汤姆",desc:"一只灰色的家猫，执着地想要抓住杰瑞，但永远以失败告终。虽然有些笨拙，但偶尔也会展现出令人惊讶的音乐才华。"},
-      {name:"杰瑞",desc:"一只聪明的棕色小老鼠，总是能利用身边的物品化险为夷。机智、勇敢、偶尔调皮，是汤姆永远抓不到的目标。"}
-    ],
-    videoUrl:""
-  },
-  { id:23, year:1992, title:"太空堡垒", titleEn:"Robotech / Macross", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"1999年一艘巨大的外星飞船坠落到地球上，人类利用飞船上的技术建造了太空堡垒。然而天顶星人追击而来，爆发了第一次宇宙大战。战斗机飞行员瑞克·卡特在战争中成长为英雄，而歌声明美则用文化的力量震撼了只知道战争的天顶星人。",
-    characters:[
-      {name:"瑞克·卡特",desc:"年轻的战斗机飞行员，从莽撞少年成长为太空堡垒的防卫队长。在战争中与两位女性产生了感情纠葛。"},
-      {name:"林明美",desc:"中日混血的少女歌手，她的歌声最终感化了天顶星人，终结了战争。但她的爱情故事令人唏嘘。"},
-      {name:"丽莎·海耶斯",desc:"太空堡垒的指挥官，冷静干练，后来成为瑞克的伴侣。"}
-    ],
-    videoUrl:""
-  },
-  { id:24, year:1992, title:"北斗神拳", titleEn:"Fist of the North Star", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"核战争毁灭了文明世界，幸存的人类在废土上挣扎求生。北斗神拳的传人拳四郎在荒野中旅行，用暗杀拳法保护弱者、惩罚恶徒。他的拳法可以点中对手的穴位，使其数秒后爆裂。「你已经死了」成为最经典的台词。",
-    characters:[
-      {name:"拳四郎",desc:"北斗神拳第64代传人，胸前有北斗七星的伤痕。沉默寡言但内心充满正义感，用铁拳守护着废土上的弱者。"}
-    ],
-    videoUrl:""
-  },
-  { id:25, year:1993, title:"宇宙骑士", titleEn:"Tekkaman Blade", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"未来世界，外星生物拉达姆入侵地球。少年D-Boy被拉达姆改造为宇宙骑士，但他摆脱了控制，反过来用宇宙骑士的力量保护地球。他必须与已被拉达姆控制的家人们战斗，经历了最残酷的兄弟对决。",
-    characters:[
-      {name:"D-Boy / 相羽鹰矢",desc:"被拉达姆改造后获得宇宙骑士装甲的少年。为了守护地球，不得不与自己的家人为敌，承受着巨大的痛苦。"}
-    ],
-    videoUrl:""
-  },
-  { id:26, year:1993, title:"魔神英雄传", titleEn:"Mashin Hero Wataru", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"小学生战部渡被召唤到创界山，驾驶魔神龙神丸与多恶达的邪恶军团战斗。每登上一层山，他和伙伴施巴拉古大师、小美就会遇到新的挑战和新的朋友。龙神丸还能根据不同的力量变身为龙星丸、超魔神龙神丸等形态。",
-    characters:[
-      {name:"战部渡",desc:"被选召到创界山的小学生，善良勇敢，是龙神丸的驾驶者。面对困难从不退缩。"},
-      {name:"施巴拉古大师",desc:"自称剑术大师的搞笑角色，实际上剑法稀松平常，但在关键时刻总能爆发。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV18s411C767&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:27, year:1994, title:"灌篮高手", titleEn:"Slam Dunk", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"红头发的不良少年樱木花道为了追求赤木晴子而加入湘北高中篮球队。从完全不会打篮球的门外汉开始，凭借惊人的天赋和不服输的精神，他成长为球队不可或缺的力量。与流川枫、赤木刚宪、三井寿、宫城良田一起，湘北队向着全国大赛发起冲击。「教练，我想打篮球」是三井寿的经典名场面。",
-    characters:[
-      {name:"樱木花道",desc:"红色头发的不良少年，因为晴子而加入篮球队。拥有惊人的体能和弹跳力，虽然是个篮球白痴但成长速度惊人。自称天才。"},
-      {name:"流川枫",desc:"湘北的王牌选手，实力超群。沉默寡言，除了篮球和睡觉对什么都不感兴趣。是樱木的头号情敌和竞争对象。"},
-      {name:"赤木晴子",desc:"赤木队长的妹妹，温柔可爱。是樱木爱上篮球的契机，但她暗恋的是流川枫。"},
-      {name:"三井寿",desc:"初中MVP，因伤堕落为不良少年后，跪在安西教练面前说出「教练，我想打篮球」后重归球队。三分神射手。"}
-    ],
-    videoUrl:""
-  },
-  { id:28, year:1994, title:"美少女战士", titleEn:"Sailor Moon", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"14岁的月野兔是个爱哭、成绩差的普通初中生。一天她救了一只有月亮印记的黑猫露娜，获得了变身胸针，成为爱与正义的水手服战士——美少女战士！她和另外四位美少女战士一起寻找银水晶、保护公主、对抗黑暗王国。「代表月亮消灭你！」是无数女孩童年最爱模仿的台词。",
-    characters:[
-      {name:"月野兔",desc:"美少女战士的主角，有些迷糊和爱哭，但在关键时刻总是勇敢站出来。前世是月亮王国的公主。"},
-      {name:"地场卫",desc:"夜礼服假面，月野兔的恋人。神秘、优雅、总是在关键时刻出现帮助美少女战士。"},
-      {name:"水野亚美",desc:"水星战士，天才少女，IQ300。冷静理智，是团队中的智囊。"},
-      {name:"火野丽",desc:"火星战士，神社的巫女。性格火爆直率，拥有强大的灵力。"}
-    ],
-    videoUrl:""
-  },
-  // ── 1995-2000 ──
-  { id:29, year:1995, title:"海尔兄弟", titleEn:"Haier Brothers", country:"中国", type:"domestic",
-    decade:"1990s",
-    synopsis:"智慧老人创造了海尔兄弟——一对由不同颜色组成的机器人兄弟。黑发海尔哥哥和金色海尔弟弟与朋友们一起乘坐环游世界，探索自然和科学的奥秘。他们穿越沙漠、潜入深海、攀登雪山，在冒险中普及科学知识。这是中国第一部大型科普动画系列片。",
-    characters:[
-      {name:"海尔哥",desc:"黑头发的机器人哥哥，沉着冷静，善于思考和分析问题，是探险队的智慧担当。"},
-      {name:"海尔弟",desc:"金头发的机器人弟弟，活泼好动，充满好奇心，对未知事物充满探索的热情。"}
-    ],
-    videoUrl:""
-  },
-  { id:30, year:1995, title:"大头儿子小头爸爸", titleEn:"Big Head Son and Small Head Dad", country:"中国", type:"domestic",
-    decade:"1990s",
-    synopsis:"大头儿子、小头爸爸和围裙妈妈组成了一个温馨的三口之家。大头儿子头大身体小、聪明活泼；小头爸爸头小身体大、幽默慈爱。动画通过一个个温馨的小故事，展现了当代中国家庭的亲子关系和生活日常。",
-    characters:[
-      {name:"大头儿子",desc:"脑袋大大的小男孩，天真可爱，充满想象力。喜欢问为什么，对世界充满好奇。"},
-      {name:"小头爸爸",desc:"头小身体大的爸爸，幽默风趣，对儿子充满耐心和爱心。是理想父亲的形象。"}
-    ],
-    videoUrl:""
-  },
-  { id:31, year:1996, title:"龙珠", titleEn:"Dragon Ball", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"住在深山的少年孙悟空遇到了寻找龙珠的少女布尔玛，从此踏上了冒险之旅。从天下第一武道会到短笛大魔王，从赛亚人入侵到那美克星之战，从人造人到魔人布欧...孙悟空和他的伙伴们不断突破极限，守护地球。「龟派气功」成为全世界的共同语言。",
-    characters:[
-      {name:"孙悟空",desc:"赛亚人卡卡罗特，在地球长大。单纯善良、热爱战斗，不断追求更强的境界。是无数少年心中的偶像。"},
-      {name:"贝吉塔",desc:"赛亚人王子，从骄傲的敌人变为最强的战友。高傲自尊，但对家人有着深沉的爱。"},
-      {name:"克林",desc:"悟空最好的朋友，虽然是地球人中最强的一位，但与赛亚人的差距越来越大。他的牺牲曾触发悟空的超赛变身。"}
-    ],
-    videoUrl:""
-  },
-  { id:32, year:1996, title:"樱桃小丸子", titleEn:"Chibi Maruko-chan", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"小学三年级女生樱桃子（小丸子）和爸爸妈妈、姐姐、爷爷奶奶生活在一起。她不爱学习、喜欢偷懒、有很多小毛病，但天真烂漫、心地善良。动画以轻松幽默的笔调描绘了小丸子的学校生活和家庭日常，让人在笑声中感受到温暖和治愈。",
-    characters:[
-      {name:"樱桃子/小丸子",desc:"三年四班的小学生，蘑菇头。懒惰、爱吐槽、成绩一般，但人缘很好。是无数平凡女孩的写照。"},
-      {name:"小玉",desc:"小丸子最好的朋友，文静乖巧，和小丸子的性格形成了互补。"},
-      {name:"花轮",desc:"班上的富家子弟，说话带英文，自恋但绅士。对小丸子似乎有好感。"}
-    ],
-    videoUrl:""
-  },
-  { id:33, year:1997, title:"名侦探柯南", titleEn:"Detective Conan", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"高中生侦探工藤新一在调查案件时被黑衣组织灌下毒药，身体缩小成了小学生模样。化名为江户川柯南的他寄住在侦探毛利小五郎家中，一边用麻醉针和变声器帮助毛利破案，一边暗中追查黑衣组织的下落。「真相只有一个！」成为一代人的信仰。",
-    characters:[
-      {name:"江户川柯南/工藤新一",desc:"被缩小的高中生侦探。拥有过人的观察力和推理能力，通过阿笠博士的道具协助破案。"},
-      {name:"毛利兰",desc:"新一的青梅竹马，空手道高手。不知道柯南就是新一，一直在等待新一回来。"},
-      {name:"毛利小五郎",desc:"兰的父亲，私家侦探。平时糊里糊涂，但在柯南的暗中帮助下成为了名震全国的沉睡的小五郎。"}
-    ],
-    videoUrl:""
-  },
-  { id:34, year:1997, title:"宠物小精灵", titleEn:"Pokémon", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"来自真新镇的少年小智带着皮卡丘踏上了成为宝可梦大师的旅程。他穿越各个地区，挑战道馆、收集徽章、参加联盟大赛。一路上他和皮卡丘建立了深厚的友谊，也结识了小霞、小刚等伙伴。「皮卡丘，就决定是你了！」和火箭队的「好讨厌的感觉」都是经典台词。",
-    characters:[
-      {name:"小智",desc:"来自真新镇的宝可梦训练家，梦想成为宝可梦大师。勇敢善良，与皮卡丘有着最深厚的羁绊。"},
-      {name:"皮卡丘",desc:"电气鼠宝可梦，小智的搭档。最初不听话，后来成为小智最忠诚的伙伴。可爱的外表征服了全世界。"},
-      {name:"火箭队",desc:"武藏、小次郎和喵喵组成的搞笑反派，每次出场都有夸张的台词和开场白，但永远抓不到皮卡丘。"}
-    ],
-    videoUrl:""
-  },
-  { id:35, year:1998, title:"四驱兄弟", titleEn:"Bakusō Kyōdai Let's & Go!!", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"星马豪和星马烈两兄弟各自拥有全覆式轨道车——冲锋战神和音速战神。他们和朋友们一起参加全国大赛和世界大赛，不断改装赛车、挑战强敌。这部动画在中国掀起了四驱车热潮，小卖部门口的四驱车赛道是90年代末最热闹的场景。",
-    characters:[
-      {name:"星马豪",desc:"哥哥，冲锋战神的拥有者。性格热血冲动，追求速度，相信自己的赛车是最快的。"},
-      {name:"星马烈",desc:"弟弟，音速战神的拥有者。冷静沉着，善于战术分析，与哥哥形成完美互补。"}
-    ],
-    videoUrl:""
-  },
-  { id:36, year:1998, title:"我为歌狂", titleEn:"Music Up", country:"中国", type:"domestic",
-    decade:"1990s",
-    synopsis:"南华高中的楚天歌和叶峰是两大音乐才子，一个阳光开朗，一个冷酷孤傲。为了参加全国原创音乐大赛，他们组建了乐队，在音乐的舞台上碰撞出火花。动画真实展现了90年代末中国高中生的校园生活和音乐梦想，主题曲《我的舞台》风靡一时。",
-    characters:[
-      {name:"楚天歌",desc:"阳光开朗的音乐才子，吉他和创作都十分出色。性格温暖，是乐队中的灵魂人物。"},
-      {name:"叶峰",desc:"冷酷孤傲的音乐天才，不善言辞但内心敏感。与楚天歌从竞争对手变成最佳搭档。"}
-    ],
-    videoUrl:""
-  },
-  { id:37, year:1999, title:"西游记", titleEn:"Journey to the West", country:"中国", type:"domestic",
-    decade:"1990s",
-    synopsis:"央视出品的52集大型动画片，忠实改编了中国古典名著《西游记》。从石猴出世、大闹天宫到唐僧收徒、西天取经，历经九九八十一难。画面精美，人物造型可爱，主题曲「猴哥猴哥，你真了不得」传遍大江南北，是国产动画电视剧的里程碑作品。",
-    characters:[
-      {name:"孙悟空",desc:"齐天大圣，神通广大。保护唐僧西天取经，虽然顽皮但忠心耿耿。"},
-      {name:"唐僧",desc:"金蝉子转世，慈悲为怀。虽然手无缚鸡之力但意志坚定，一心向佛。"},
-      {name:"猪八戒",desc:"天蓬元帅转世，贪吃好色但憨厚可爱。九齿钉耙是他在高老庄时的兵器。"},
-      {name:"沙僧",desc:"卷帘大将转世，忠厚老实、任劳任怨，是取经团队中最稳定的力量。"}
-    ],
-    videoUrl:""
-  },
-  { id:38, year:1999, title:"数码宝贝", titleEn:"Digimon Adventure", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"七个被选召的孩子在夏令营中突然被带到了数码世界。每个人都有一个数码宝贝搭档，他们可以和搭档一起进化战斗。从成长期到成熟期、完全体再到究极体，孩子们和数码宝贝一起成长。「亚古兽进化——暴龙兽！」和「Butter-fly」主题曲是90末孩子们最燃的记忆。",
-    characters:[
-      {name:"八神太一",desc:"勇气徽章的持有者，孩子们的领袖。勇敢果断，搭档是亚古兽。护目镜是他的标志。"},
-      {name:"石田大和",desc:"友情徽章的持有者，太一最好的朋友和竞争对手。冷酷外表下有温柔的心，搭档是加布兽。"},
-      {name:"太刀川美美",desc:"纯真徽章的持有者，天真烂漫的大小姐。搭档是巴鲁兽，仙人掌兽的进化让她成长。"}
-    ],
-    videoUrl:""
-  },
-  { id:39, year:1999, title:"宝莲灯", titleEn:"Lotus Lantern", country:"中国", type:"domestic",
-    decade:"1990s",
-    synopsis:"少年沉香为了救出被压在华山下的母亲三圣母，踏上了寻仙学艺的艰险之路。他历经千难万险，在孙悟空等人的帮助下，最终用神斧劈开华山，与母亲团聚。这是上海美术电影制片厂继《大闹天宫》后的又一里程碑，代表了90年代末中国动画电影的最高水准。",
-    characters:[
-      {name:"沉香",desc:"三圣母的儿子，为了救母不惜一切。从一个普通少年成长为劈山救母的英雄。"},
-      {name:"孙悟空",desc:"斗战胜佛，在沉香寻母的路上给予指点。虽然戏份不多，但斗战胜佛的气场十足。"},
-      {name:"三圣母",desc:"沉香的母亲，因爱上凡人而被压在华山下。温柔美丽，是沉香一切努力的动力。"}
-    ],
-    videoUrl:""
-  },
-  { id:40, year:2000, title:"新世纪福音战士", titleEn:"Neon Genesis Evangelion", country:"日本", type:"imported",
-    decade:"2000s",
-    synopsis:"2015年，被称作「使徒」的神秘生物袭击了第三新东京市。14岁的少年碇真嗣被父亲叫到NERV总部，驾驶巨大的人形兵器EVA初号机迎战使徒。这部动画表面上是机甲战斗，实则深入探讨了人性、孤独、自我认同等深刻的心理学主题，是日本动画史上的里程碑。",
-    characters:[
-      {name:"碇真嗣",desc:"EVA初号机的驾驶员，自卑内向的14岁少年。渴望父亲的认可，在不断的战斗中寻找自己存在的意义。"},
-      {name:"绫波丽",desc:"EVA零号机的驾驶员，沉默寡言的神秘少女。她的身世是整部作品最大的谜团之一。"},
-      {name:"明日香",desc:"EVA二号机的驾驶员，骄傲自信的德日混血少女。表面强势但内心极度缺乏安全感。"}
-    ],
-    videoUrl:""
-  },
-  { id:41, year:2000, title:"虹猫蓝兔七侠传", titleEn:"The Legend of Seven Heroes", country:"中国", type:"domestic",
-    decade:"2000s",
-    synopsis:"魔教教主的阴谋威胁着武林的和平。七剑传人虹猫、蓝兔等人必须集齐七把神剑，才能对抗魔教。虹猫手持长虹剑，蓝兔手持冰魄剑，还有其他五位剑客各持一把神剑。七剑合璧，天下无敌。这部动画开创了中国武侠动画的新纪元，打斗场面精彩纷呈。",
-    characters:[
-      {name:"虹猫",desc:"长虹剑的传人，勇敢善良。一身正气，为了武林的和平不惜一切。与蓝兔青梅竹马。"},
-      {name:"蓝兔",desc:"冰魄剑的传人，美丽聪慧。对虹猫情深义重，两人配合默契，是大家心中的最佳搭档。"}
-    ],
-    videoUrl:""
-  },
-  // ── Bonus entries ──
-  { id:42, year:1986, title:"天书奇谭", titleEn:"The Legend of Sealed Book", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"袁公将天庭的天书偷偷传给世人，玉帝震怒将他贬下凡间。蛋生是一个从蛋中出生的神奇孩子，他得到了天书的传承，学会了各种法术。然而三只狐妖偷走了天书，四处作恶。蛋生与狐妖展开了斗智斗勇的斗争，最终收回天书，为民除害。",
-    characters:[
-      {name:"蛋生",desc:"从天鹅蛋中出生的神奇男孩，活泼机灵。在袁公的教导下学会了天书法术，用法术为民造福。"},
-      {name:"袁公",desc:"天庭的神仙，为了将天书传给世人而触犯天规。正直无畏，是蛋生的启蒙老师。"}
-    ],
+  { id:8, year:1986, title:"天书奇谭", titleEn:"The Legend of Sealed Book", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"袁公将天书偷传世人，蛋生从蛋中出生得到天书传承。三只狐妖偷走天书四处作恶，蛋生与狐妖斗智斗勇，最终收回天书为民除害。",
+    characters:[{name:"蛋生",desc:"从天鹅蛋中出生的神奇男孩。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV13PaseFEU6&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:43, year:1992, title:"小龙人", titleEn:"Little Dragon Man", country:"中国", type:"domestic",
-    decade:"1990s",
-    synopsis:"小龙人是一个长着龙角、龙尾巴的小男孩，由三个小朋友在故宫中发现。他为了寻找自己的妈妈，和小朋友们一起踏上了冒险之旅。虽然严格来说这是一部真人儿童剧，但其中大量使用了动画特效，在90年代初的中国儿童心中留下了深刻的记忆。",
-    characters:[
-      {name:"小龙人",desc:"长着龙角龙尾巴的小男孩，天真可爱。最大的愿望是找到自己的妈妈。"}
-    ],
-    videoUrl:""
+  { id:9, year:1987, title:"变形金刚", titleEn:"Transformers", country:"美国", type:"imported", era:"80年代",
+    synopsis:"汽车人和霸天虎在赛博坦星球进行了数百万年战争。汽车人以擎天柱为首保护地球，霸天虎以威震天为首企图掠夺地球资源。",
+    characters:[{name:"擎天柱",desc:"汽车人领袖，正直、勇敢、无私。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV14rA2eGE7w&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:44, year:1985, title:"阿凡提的故事", titleEn:"The Story of Effendi", country:"中国", type:"domestic",
-    decade:"1980s",
-    synopsis:"智慧的阿凡提骑着小毛驴，走遍新疆各地。他用机智和幽默帮助穷苦的百姓，巧妙地惩罚贪婪的巴依老爷和昏庸的官员。每一集都是一个小故事，短短几分钟却寓意深刻。阿凡提的那句「好人有好报」和倒骑毛驴的形象家喻户晓。",
-    characters:[
-      {name:"阿凡提",desc:"头戴民族小帽、倒骑小毛驴的智者。幽默风趣，总是用出人意料的方式解决难题。"},
-      {name:"巴依老爷",desc:"贪婪的地主，总是想占穷人便宜，但每次都被阿凡提巧妙地教训。"}
-    ],
+  { id:10, year:1987, title:"邋遢大王奇遇记", titleEn:"King of the Lazy", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"一个不讲卫生的小男孩被老鼠带入地下老鼠王国，经历一系列惊险奇遇，最终逃出生天，也改掉了邋遢的坏毛病。",
+    characters:[{name:"邋遢大王",desc:"不爱干净的男孩，在冒险中逐渐成长。"}], videoUrl:""
+  },
+  { id:11, year:1988, title:"恐龙特急克塞号", titleEn:"Koseidon", country:"日本", type:"imported", era:"80年代",
+    synopsis:"来自未来世界的时代战士，对抗入侵地球的格德米斯星人。「人间大炮，一级准备！二级准备！发射！」是80后最燃的口号。",
+    characters:[{name:"格吾/克塞",desc:"通过人间大炮发射变身为克塞战士。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Eg4y127qk&page=1&high_quality=1&autoplay=0&t=0"
+  },
+  { id:12, year:1989, title:"舒克和贝塔", titleEn:"Shuke and Beita", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"两只小老鼠舒克和贝塔不愿意偷东西过日子。舒克开直升机，贝塔开坦克，他们成为了最好的朋友。",
+    characters:[{name:"舒克",desc:"开直升机的小老鼠。"},{name:"贝塔",desc:"开坦克的小老鼠。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1Ms4y1k7K1&page=1&high_quality=1&autoplay=0&t=0"
+  },
+  { id:13, year:1990, title:"圣斗士星矢", titleEn:"Saint Seiya", country:"日本", type:"imported", era:"90年代",
+    synopsis:"雅典娜的圣斗士们穿着代表88个星座的圣衣，为了保护女神雅典娜而战。「燃烧吧，我的小宇宙！」激励了整整一代人。",
+    characters:[{name:"星矢",desc:"天马座，永不言弃的热血少年。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1E54y1N7LA&page=1&high_quality=1&autoplay=0&t=0"
+  },
+  { id:14, year:1990, title:"哆啦A梦", titleEn:"Doraemon", country:"日本", type:"imported", era:"90年代",
+    synopsis:"来自22世纪的猫型机器人哆啦A梦，四次元口袋里装满了各种神奇道具。但大雄每次都会把事情搞砸。",
+    characters:[{name:"哆啦A梦",desc:"来自22世纪的猫型机器人，最怕老鼠。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1C4411R7jK&page=1&high_quality=1&autoplay=0&t=0"
+  },
+  { id:15, year:1993, title:"魔神英雄传", titleEn:"Mashin Hero Wataru", country:"日本", type:"imported", era:"90年代",
+    synopsis:"小学生战部渡被召唤到创界山，驾驶魔神龙神丸与多恶达战斗。每登上一层山都会遇到新的挑战。",
+    characters:[{name:"战部渡",desc:"被选召到创界山的小学生。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV18s411C767&page=1&high_quality=1&autoplay=0&t=0"
+  },
+  { id:36, year:1989, title:"天空战记", titleEn:"Tenku Senki / Shurato", country:"日本", type:"imported", era:"80年代",
+    synopsis:"高中生日高秋人在比武大会中被召唤到天界，转世为修罗王。为拯救天界和平，他与迦楼罗王、龙王等八部众战士对抗破坏神。「修罗魔破拳！」是80后童年最燃的咒语之一。",
+    characters:[{name:"日高秋人/修罗特",desc:"修罗王转世，赤诚正义。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1sm4y1X7TQ&page=1&high_quality=1&autoplay=0&t=0"
+  },
+  { id:31, year:1988, title:"忍者神龟", titleEn:"TMNT", country:"美国", type:"imported", era:"80年代",
+    synopsis:"四只被神秘液体变异的宠物龟，在纽约下水道被老鼠师父斯普林特养大。爱吃披萨，爱说俏皮话。",
+    characters:[{name:"莱昂纳多",desc:"蓝眼带双刀，武艺精湛。"}],
+    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1MC4y1s7Lu&page=1&high_quality=1&autoplay=0&t=0"
+  },
+  { id:30, year:1985, title:"阿凡提的故事", titleEn:"Effendi", country:"中国", type:"domestic", era:"80年代",
+    synopsis:"智慧的阿凡提骑着小毛驴，用机智和幽默帮助穷苦百姓，巧妙地惩罚贪婪的巴依老爷。",
+    characters:[{name:"阿凡提",desc:"头戴民族小帽、倒骑小毛驴的智者。"}],
     videoUrl:"https://player.bilibili.com/player.html?bvid=BV1UMXpYnEXB&page=1&high_quality=1&autoplay=0&t=0"
   },
-  { id:45, year:1991, title:"三个火枪手", titleEn:"The Three Musketeers (Anime)", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"改编自大仲马的同名小说，少年达达尼昂来到巴黎，与三个火枪手成为好友，一起守护王后和王国的和平。日式画风与欧洲经典文学的结合，让这部动画在90年代初期成为很多孩子的文学启蒙。",
-    characters:[
-      {name:"达达尼昂",desc:"来自乡下的热血少年，梦想成为火枪手。勇敢、正直、讲义气。"}
-    ],
-    videoUrl:""
-  },
-  { id:46, year:1996, title:"逮捕令", titleEn:"You're Under Arrest", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"东京警视厅交通课的两名女警——小早川美幸和辻本夏实，一个沉着冷静一个热血冲动。她们在执勤中处理各种交通案件，也结下了深厚的友谊。动画节奏明快，充满了速度和青春的气息。",
-    characters:[
-      {name:"小早川美幸",desc:"冷静理智的女警，擅长机械和驾驶技术。平时温柔，但开车时判若两人。"},
-      {name:"辻本夏实",desc:"热血冲动的女警，体力惊人。大大咧咧的性格与美幸形成对比，两人是最佳搭档。"}
-    ],
-    videoUrl:""
-  },
-  { id:47, year:1993, title:"罗德岛战记", titleEn:"Record of Lodoss War", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"在被诅咒的罗德岛上，一位名叫帕恩的年轻剑士踏上了冒险之路。他和精灵蒂德莉特、矮人吉姆、魔法师史列因、盗贼伍德一起，对抗黑暗势力。动画基于西方奇幻设定，在日式动画中独树一帜，是剑与魔法题材的经典之作。",
-    characters:[
-      {name:"帕恩",desc:"年轻的自由骑士，正义感强烈。虽然实力不如对手但从不放弃，最终成长为英雄。"},
-      {name:"蒂德莉特",desc:"高等精灵，与帕恩在冒险中相恋。拥有精灵的魔法和弓箭技艺。"}
-    ],
-    videoUrl:""
-  },
-  { id:48, year:1990, title:"小小外星人", titleEn:"Tong Tong", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"来自外星球的小小外星人通通来到了地球，只有手掌大小。他与人类小女孩成为了好朋友，用外星科技帮助她解决生活中的各种小麻烦。动画温暖治愈，是90年代初温馨动画的代表。",
-    characters:[
-      {name:"通通",desc:"手掌大小的外星人，天真可爱。对地球上的一切都充满好奇。"}
-    ],
-    videoUrl:""
-  },
-  { id:49, year:1998, title:"星际牛仔", titleEn:"Cowboy Bebop", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"2071年，太阳系成为了人类的新疆域。赏金猎人们驾驶着飞船Bebop号在星际之间追捕罪犯。史派克、杰特、菲和爱因组成了一个不像家人胜似家人的团队。爵士乐配乐、硬汉风格、哲学思考，让这部动画成为日本动画中的艺术品。",
-    characters:[
-      {name:"史派克",desc:"前黑帮成员，Bebop号的赏金猎人。散漫不羁但身手了得，永远活在过去的阴影中。"},
-      {name:"杰特",desc:"Bebop号的船长，退役警察。稳重大叔，默默照顾着这群不靠谱的伙伴。"}
-    ],
-    videoUrl:""
-  },
-  { id:50, year:1983, title:"尼尔斯骑鹅旅行记", titleEn:"The Wonderful Adventures of Nils", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"顽皮的男孩尼尔斯因为捉弄小精灵而被变成了拇指大小的小人儿。他骑在自家的大鹅马丁的背上，跟随着野鹅群飞越了整个瑞典。在旅途中尼尔斯见识了大自然的壮美，也学会了爱和勇气。当他终于变回原样时，已经成为了一个完全不同的人。",
-    characters:[
-      {name:"尼尔斯",desc:"被缩小的瑞典男孩，从自私顽劣变成了善良勇敢的少年。骑在鹅背上周游全国的经历改变了他的一生。"}
-    ],
-    videoUrl:""
-  },
-  { id:51, year:1987, title:"棒球英豪", titleEn:"Touch", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"上杉达也和上杉和也是一对双胞胎兄弟，与邻家女孩浅仓南从小一起长大。天才弟弟和也梦想带小南进入甲子园，却在决赛前意外去世。散漫的哥哥达也继承了弟弟的梦想，开始认真打棒球，向着甲子园迈进。这是一部关于青春、梦想与失去的经典。",
-    characters:[
-      {name:"上杉达也",desc:"双胞胎哥哥，平时懒散但天赋异禀。弟弟去世后，他背负起两人的梦想继续前行。"},
-      {name:"浅仓南",desc:"达也和也的青梅竹马，邻家女孩的完美代表。可爱又坚强，一直在默默支持达也。"}
-    ],
-    videoUrl:""
-  },
-  { id:52, year:1999, title:"海绵宝宝", titleEn:"SpongeBob SquarePants", country:"美国", type:"imported",
-    decade:"1990s",
-    synopsis:"在太平洋海底的比奇堡，住着一只黄色的方形海绵——海绵宝宝。他在蟹老板的蟹堡王餐厅做厨师，和好朋友派大星、邻居章鱼哥一起经历了无数令人捧腹的冒险。海绵宝宝永远乐观向上，热爱生活和工作，是世纪末最欢乐的动画。",
-    characters:[
-      {name:"海绵宝宝",desc:"住在海底菠萝屋里的小海绵，蟹堡王的最佳厨师。永远乐观，笑声魔性，对生活充满热情。"},
-      {name:"派大星",desc:"海绵宝宝最好的朋友，一只粉色的海星。天真（或者说有点傻），永远支持海绵宝宝的各种想法。"}
-    ],
-    videoUrl:""
-  },
-  { id:53, year:1990, title:"魔神坛斗士", titleEn:"Ronin Warriors", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"五个少年被选为神盔甲的继承者——烈火、水浒、金刚、光辉、天空。他们穿上神盔甲，与妖邪界帝王阿罗醐战斗。每件盔甲都蕴含着武士道精神的核心美德：仁、义、礼、智、信。这部动画的热血程度不输圣斗士星矢。",
-    characters:[
-      {name:"烈火（真田良）",desc:"烈火神盔甲的继承者，代表「仁」。热血正义，是五人的核心领袖。"}
-    ],
-    videoUrl:"https://player.bilibili.com/player.html?bvid=BV1gb411k7y4&page=1&high_quality=1&autoplay=0&t=0"
-  },
-  { id:54, year:1996, title:"钢铁神兵", titleEn:"B't X", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"少年高宫铁兵为了救出被机械皇国囚禁的科学家哥哥，带着机械圣兽B't X战斗在机械皇国的各个据点。B't是一种拥有人工智能的机械生物。这部由车田正美创作的动画继承了圣斗士的热血风格，机械设定十分酷炫。",
-    characters:[
-      {name:"高宫铁兵",desc:"热血少年，为了救哥哥而闯入机械皇国。与搭档B't X（麒麟形态的机械圣兽）并肩作战。"}
-    ],
-    videoUrl:""
-  },
-  { id:55, year:2000, title:"鸭子侦探", titleEn:"A Miss Mallard Mystery", country:"中国/加拿大", type:"domestic",
-    decade:"2000s",
-    synopsis:"梅拉德小姐是一只聪明优雅的鸭子侦探。她周游世界，凭借敏锐的观察力和出色的推理能力侦破各种离奇案件。她的侄子维勒总是跟在她身边，虽然笨手笨脚但心地善良。这是中国和加拿大联合制作的动画，在推理趣味和画面质量上都达到了很高的水准。",
-    characters:[
-      {name:"梅拉德小姐",desc:"世界著名的鸭子侦探，无论走到哪里都会遇到案件。头脑敏锐，推理能力一流，用智慧和勇气揭开真相。"}
-    ],
-    videoUrl:""
-  },
-  // ── 补充  ──
-  { id:56, year:1987, title:"六神合体", titleEn:"Godmars", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"未来世界，少年明神岳被选中成为地球的守护者。他驾驶着由六架战机合体组成的巨大机器人——六神合体雷霆王，与异星侵略者祖鲁皇帝展开殊死战斗。六架战机分别隐藏在六个秘密基地中，每次召唤时的合体动画是80后最经典的热血画面。",
-    characters:[
-      {name:"明神岳",desc:"六神合体的驾驶员，被选为地球守护者的少年。勇敢坚定，驾驶着六架战机组合成的雷霆王守护和平。"}
-    ],
-    videoUrl:""
-  },
-  { id:57, year:1989, title:"天空战记", titleEn:"The Sky Warriors Shurato", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"高中生日高秋亚人和好友黑木凯在一场武术比赛中，突然被召唤到异世界天界。原来他们是天界的守护战士转世。秋亚人成为修罗王，而凯却被黑暗力量腐蚀成为夜叉王。昔日的挚友成为宿命的敌人，在天界展开了壮绝的战斗。这部动画融合了印度神话和佛教元素，风格独特。",
-    characters:[
-      {name:"日高秋亚人/修罗王",desc:"被召唤到天界的高中生，修罗王的转世。重情重义，为了拯救好友凯而战斗。"},
-      {name:"黑木凯/夜叉王",desc:"秋亚人的好友，被黑暗力量腐蚀成为夜叉王。内心挣扎在友情和黑暗之间。"}
-    ],
-    videoUrl:""
-  },
-  { id:58, year:1985, title:"特种部队", titleEn:"G.I. Joe", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"一支名为特种部队的精英军事小队对抗邪恶的眼镜蛇组织。公爵、红发女郎、面具人、拦路虎等角色各自身怀绝技，与眼镜蛇指挥官、迪斯特罗等反派展开了无穷无尽的战斗。每集结尾都有寓教于乐的安全提示：「现在你知道了吗？知道了！」。",
-    characters:[
-      {name:"公爵",desc:"特种部队的指挥官，金发英俊的完美军人。沉着冷静，战术指挥能力出众。"},
-      {name:"眼镜蛇指挥官",desc:"眼镜蛇组织的首领，永远戴着银色面具。野心勃勃想要统治世界，但每次都被特种部队击败。"}
-    ],
-    videoUrl:""
-  },
-  { id:59, year:1986, title:"神探加杰特", titleEn:"Inspector Gadget", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"加杰特是一个全身装满高科技装置的半机械人警探。他的身体可以弹出各种道具：伸缩手臂、弹射腿、直升机帽子...可惜他本人笨手笨脚，总是被侄女佩妮和她的狗布拉诺在暗中帮助才能破案。邪恶的克劳博士永远戴着金属爪，策划着阴谋。每集结尾那句「哇哦！」让人笑出声。",
-    characters:[
-      {name:"加杰特",desc:"半机械人警探，全身装满道具但总是搞砸。憨厚可爱的性格让人忍俊不禁。"},
-      {name:"佩妮",desc:"加杰特的侄女，真正的破案天才。总在暗中帮叔叔收拾残局，智勇双全。"}
-    ],
-    videoUrl:""
-  },
-  { id:60, year:1984, title:"百变雄狮", titleEn:"Challenge of the GoBots", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"来自戈博特朗星的守护者和叛逆者在星球毁灭后来到地球。守护者领袖里德王带领队伍保护地球，而叛逆者的塞格特则企图征服地球。双方都能变形为各种交通工具。这部动画常被认为是变形金刚的有力竞争者，两者在80年代中期同时风靡全球。",
-    characters:[
-      {name:"里德王",desc:"守护者的领袖，睿智勇敢。变形成战斗机，带领百变雄狮守护地球和平。"},
-      {name:"塞格特",desc:"叛逆者的领袖，野心勃勃。变形成赛车，一直企图征服地球和消灭守护者。"}
-    ],
-    videoUrl:""
-  },
-  { id:61, year:1992, title:"大力水手", titleEn:"Popeye the Sailor Man", country:"美国", type:"imported",
-    decade:"1990s",
-    synopsis:"独眼的水手波派爱着奥利弗，却总是被情敌布鲁托找麻烦。每当波派吃下一罐菠菜，就会变得力大无穷，一拳打飞布鲁托。这部动画让无数中国孩子相信吃菠菜能变强壮。「我是大力水手波派！」和他标志性的烟斗和笑声是永恒的经典。",
-    characters:[
-      {name:"波派",desc:"大力水手，独眼、叼烟斗、前臂粗壮。吃菠菜后力大无穷，永远保护着奥利弗。"},
-      {name:"奥利弗",desc:"波派的女友，瘦高的女孩。虽然经常被布鲁托骚扰，但对波派始终不变。"},
-      {name:"布鲁托",desc:"波派的情敌，大块头恶棍。每次都欺负波派，但菠菜一出就注定要被打飞。"}
-    ],
-    videoUrl:""
-  },
-  { id:62, year:1996, title:"佐罗", titleEn:"The Legend of Zorro (Anime)", country:"日本", type:"imported",
-    decade:"1990s",
-    synopsis:"18世纪末的西班牙殖民地加利福尼亚，贵族青年迪亚哥白天装作软弱无能的纨绔子弟，夜晚则化身为蒙面侠客佐罗，用剑与鞭为受压迫的人民伸张正义。日本动画版佐罗融合了日式热血与西方侠客传奇，那句「我是佐罗！」和用剑划出的Z字让人热血沸腾。",
-    characters:[
-      {name:"迪亚哥/佐罗",desc:"白天是胆小贵族，夜晚化身蒙面侠客。剑术高超，用剑划出Z字符号。为正义而战的不朽英雄。"},
-      {name:"萝莉塔",desc:"迪亚哥的恋人，美丽勇敢的少女。不知道佐罗就是迪亚哥，深深仰慕着神秘的蒙面侠客。"}
-    ],
-    videoUrl:""
-  },
-  { id:63, year:1984, title:"海底小精灵", titleEn:"Snorks", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"在深海的珊瑚礁下生活着一群可爱的小精灵——海底小精灵。他们头顶有通气管，可以喷出气泡。主角奥斯克和朋友们在海底世界展开了各种有趣冒险，同时也要应对一些坏心眼精灵的捣乱。这部动画和蓝精灵同一个制作团队，风格轻松可爱。",
-    characters:[
-      {name:"奥斯克",desc:"黄色海底小精灵，勇敢乐观。头顶的通气管会喷出彩色气泡，总带着朋友们探索海底新世界。"}
-    ],
-    videoUrl:""
-  },
-  { id:64, year:1988, title:"咪咪流浪记", titleEn:"Nobody's Boy: Remi", country:"日本", type:"imported",
-    decade:"1980s",
-    synopsis:"少年雷米被养父卖给了一个流浪艺人。他和老师傅维塔利斯带着三只聪明的狗和一只猴子，在法国各地流浪卖艺。雷米在旅途中经历了无数苦难，也遇到了善良的人们。他真正的身份是一位英国贵族的儿子，最终在历尽艰辛后与生母团聚。这部动画让无数80后流下眼泪。",
-    characters:[
-      {name:"雷米",desc:"被收养又遭遗弃的孤儿少年。坚强乐观，在流浪卖艺的路上寻找真正的家和亲人。"},
-      {name:"维塔利斯",desc:"收留雷米的流浪老艺人。外表严厉内心善良，教给雷米音乐和人生的道理。"}
-    ],
-    videoUrl:""
-  },
-  { id:65, year:1986, title:"小不点乐队", titleEn:"The Littles", country:"美国", type:"imported",
-    decade:"1980s",
-    synopsis:"在人类的房子里，隐藏着一个微型世界。一群只有手指大小的小不点人住在墙后的通道里，他们有自己完整的社会。小不点男孩汤姆经常和他的滑翔机一起冒险，而人类男孩亨利是他们唯一知道秘密的人类朋友。",
-    characters:[
-      {name:"汤姆·小不点",desc:"勇敢的小不点男孩，喜欢冒险。常常滑翔在人类世界中，和人类男孩亨利是好朋友。"}
-    ],
-    videoUrl:""
-  }
+];
+
+const CHANNELS = [
+  { num:1, label:"综合频道", bias:"all" },
+  { num:2, label:"少儿频道", bias:"domestic" },
+  { num:3, label:"国际频道", bias:"imported" },
+  { num:4, label:"电影频道", bias:"feature" },
+  { num:5, label:"怀旧剧场", bias:"80年代" },
+  { num:6, label:"周二检修", bias:"offline" },
+  { num:7, label:"儿童节特播", bias:"holiday" },
+  { num:8, label:"随机轮播", bias:"random" },
+];
+
+const programGuide = [
+  { time:"17:30", title:"铁臂阿童木", animId:1 },
+  { time:"18:00", title:"哪吒闹海", animId:2 },
+  { time:"18:30", title:"聪明的一休", animId:4 },
+  { time:"19:00", title:"新闻联播", animId:null },
+  { time:"19:40", title:"黑猫警长", animId:5 },
+  { time:"20:10", title:"蓝精灵", animId:6 },
+  { time:"20:40", title:"舒克和贝塔", animId:12 },
+  { time:"21:10", title:"圣斗士星矢", animId:13 },
+  { time:"21:40", title:"恐龙特急克塞号", animId:11 },
+  { time:"23:59", title:"葫芦兄弟 · 六一特播", animId:7 },
 ];
 
 // ============================================================
-// Boot Animation — Snow → Welcome → Fade
+// STATE
 // ============================================================
-window.addEventListener('load', () => {
-  const bootSnow = document.getElementById('bootSnow');
-  const bootWelcome = document.getElementById('bootWelcome');
-  const bootLed = document.getElementById('bootLed');
-  const bootChannel = document.getElementById('bootChannel');
-  const bootScreen = document.getElementById('bootScreen');
-
-  // Phase 1: Snow plays for 2s
-  setTimeout(() => {
-    // Phase 2: Snow clears → welcome appears
-    bootSnow.classList.add('clearing');
-    bootWelcome.classList.add('show');
-  }, 2000);
-
-  setTimeout(() => {
-    // Phase 3: LED goes green, channel text shows
-    bootLed.classList.add('on');
-    bootChannel.classList.add('show');
-  }, 2800);
-
-  setTimeout(() => {
-    // Phase 4: Fade out entire boot screen
-    bootScreen.classList.add('hidden');
-  }, 3800);
-});
-
-// ============================================================
-// State
-// ============================================================
-
-// ============================================================
-// Channel System — Random Play Mode
-// ============================================================
-const videoAnims = animations.filter(a => a.videoUrl && a.videoUrl.trim());
 let currentAnim = null;
-let channelHistory = [];
+let currentChannel = 2;
+let knobAngle = 0;
+let loopTimer = null;
 
-document.getElementById('totalCount').textContent = animations.length;
-document.getElementById('videoCount').textContent = videoAnims.length;
-
-function pickRandomChannel() {
-  if (videoAnims.length === 0) return null;
-  if (videoAnims.length === 1) return videoAnims[0];
-  const pool = videoAnims.filter(a => a !== currentAnim);
-  if (pool.length === 0) return videoAnims[Math.floor(Math.random() * videoAnims.length)];
-  return pool[Math.floor(Math.random() * pool.length)];
+// ============================================================
+// AUDIO ENGINE
+// ============================================================
+let audioCtx = null;
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+function noiseBuf(dur) {
+  const sr = audioCtx.sampleRate;
+  const buf = audioCtx.createBuffer(1, sr*dur, sr);
+  const d = buf.getChannelData(0);
+  for (let i=0; i<d.length; i++) d[i] = Math.random()*2-1;
+  return buf;
+}
+function playSnowBurst() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const s = audioCtx.createBufferSource();
+  s.buffer = noiseBuf(0.35);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+  const f = audioCtx.createBiquadFilter();
+  f.type="bandpass"; f.frequency.setValueAtTime(3000,t); f.Q.setValueAtTime(0.5,t);
+  s.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  s.start(t); s.stop(t+0.35);
+}
+function playClick() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  o.type="square"; o.frequency.setValueAtTime(800,t); o.frequency.linearRampToValueAtTime(200,t+0.04);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.12,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t+0.06);
+}
+function playBootHum() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  o.type="sawtooth"; o.frequency.setValueAtTime(50,t); o.frequency.linearRampToValueAtTime(15000,t+1.8);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.2,t); g.gain.linearRampToValueAtTime(0.4,t+0.8);
+  g.gain.linearRampToValueAtTime(0.3,t+1.2); g.gain.exponentialRampToValueAtTime(0.001,t+2.2);
+  const f = audioCtx.createBiquadFilter();
+  f.type="lowpass"; f.frequency.setValueAtTime(200,t); f.frequency.linearRampToValueAtTime(8000,t+1.8);
+  o.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t+2.2);
+}
+function playPowerToggle(on) {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator();
+  if (on) { o.type="sine"; o.frequency.setValueAtTime(60,t); o.frequency.linearRampToValueAtTime(15000,t+0.5); }
+  else { o.type="sine"; o.frequency.setValueAtTime(15000,t); o.frequency.exponentialRampToValueAtTime(30,t+0.3); }
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.2,t); g.gain.exponentialRampToValueAtTime(0.001,t+(on?0.8:0.5));
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t+(on?0.8:0.5));
 }
 
-function tuneToChannel(anim, channelNum) {
-  if (!anim) return;
+// ============================================================
+// TV CHANNEL LOGIC
+// ============================================================
+function triggerSnowTransition() {
+  initAudio();
+  const snow = document.getElementById('snowOverlay');
+  snow.classList.remove('active');
+  void snow.offsetWidth;
+  snow.classList.add('active');
+  playSnowBurst();
+  playClick();
+}
 
-  // CRT switch animation
-  const overlay = document.getElementById('channelSwitch');
-  overlay.classList.remove('active');
-  void overlay.offsetWidth;
-  overlay.classList.add('active');
+function showNoSignal() {
+  document.getElementById('noSignalOverlay').classList.add('visible');
+  document.getElementById('npVideo').innerHTML = '';
+  document.getElementById('npPreload').innerHTML = '';
+}
+function hideNoSignal() {
+  document.getElementById('noSignalOverlay').classList.remove('visible');
+}
 
-  // Update video
+function updateChannelInfo(chDef, anim) {
+  document.getElementById('channelWatermark').textContent = 'CH ' + currentChannel + ' ' + (chDef?chDef.label:'');
+  if (anim) {
+    document.getElementById('npChannelNum').textContent = 'CH ' + currentChannel;
+    document.getElementById('npTitle').textContent = anim.title;
+    document.getElementById('npYear').textContent = anim.year + ' · ' + anim.country;
+    const badge = document.getElementById('npBadge');
+    badge.textContent = anim.type === 'domestic' ? '国产' : '引进';
+    badge.style.color = anim.type === 'domestic' ? '#4da6ff' : '#ff7c3a';
+    badge.style.border = '1px solid ' + (anim.type === 'domestic' ? 'rgba(77,166,255,.3)' : 'rgba(255,124,58,.3)');
+  } else {
+    document.getElementById('npTitle').textContent = chDef ? chDef.label : '';
+    document.getElementById('npYear').textContent = '';
+    document.getElementById('npBadge').textContent = '';
+  }
+}
+
+function preloadAndPlay(anim, chDef) {
+  currentAnim = anim;
+  updateChannelInfo(chDef, anim);
+  hideNoSignal();
+
   const npVideo = document.getElementById('npVideo');
-  if (anim.videoUrl && anim.videoUrl.trim()) {
-    const autoUrl = anim.videoUrl.replace('autoplay=0', 'autoplay=1');
-    npVideo.innerHTML = '<iframe src="' + autoUrl + '" allowfullscreen allow="autoplay"></iframe>';
+  const npPreload = document.getElementById('npPreload');
+  let vidUrl = anim.videoUrl.trim();
+  vidUrl = vidUrl.replace('autoplay=0','autoplay=1');
+  if (!vidUrl.includes('danmaku=')) vidUrl += '&danmaku=0';
+  if (!vidUrl.includes('t=')) vidUrl += '&t=2';
+
+  npPreload.innerHTML = '<iframe src="'+vidUrl+'" allowfullscreen allow="autoplay"></iframe>';
+  npPreload.style.visibility = 'hidden';
+
+  setTimeout(() => {
+    npVideo.innerHTML = npPreload.innerHTML;
+    npPreload.innerHTML = '';
+    if (loopTimer) clearInterval(loopTimer);
+    loopTimer = setInterval(() => {
+      if (currentAnim === anim) {
+        npVideo.innerHTML = '<iframe src="'+vidUrl+'" allowfullscreen allow="autoplay"></iframe>';
+      }
+    }, 18*60*1000);
+  }, 650);
+}
+
+function tuneToChannel(chNum) {
+  currentChannel = chNum;
+  const chDef = CHANNELS.find(c => c.num === chNum) || CHANNELS[0];
+  if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
+
+  triggerSnowTransition();
+
+  if (chNum === 6) { showNoSignal(); updateChannelInfo(chDef, null); currentAnim = null; return; }
+  if (chNum === 7) { const hlw = animations.find(a => a.id === 7); if (hlw) { preloadAndPlay(hlw, chDef); return; } }
+
+  let pool;
+  switch (chDef.bias) {
+    case 'domestic': pool = animations.filter(a => a.type === 'domestic'); break;
+    case 'imported': pool = animations.filter(a => a.type === 'imported'); break;
+    case '80年代': pool = animations.filter(a => a.era === '80年代'); break;
+    case 'feature': pool = animations.filter(a => a.year >= 1990); break;
+    case 'holiday': pool = animations.filter(a => a.type === 'domestic'); break;
+    default: pool = animations;
   }
 
-  // Update info bar
-  document.getElementById('npChannelNum').textContent = 'CH ' + channelNum;
-  document.getElementById('npTitle').textContent = anim.title;
-  document.getElementById('npYear').textContent = anim.year + ' · ' + anim.country;
+  pool = pool.filter(a => a.videoUrl && a.videoUrl.trim());
+  if (pool.length === 0) { showNoSignal(); updateChannelInfo(chDef, null); currentAnim = null; return; }
 
-  // Update control panel channel display
-  document.getElementById('channelDisplay').textContent = channelNum;
-  currentAnim = anim;
-
-  // Show newspaper
-  showNewspaper(anim);
+  const filtered = pool.filter(a => a !== currentAnim);
+  const pick = (filtered.length > 0 ? filtered : pool)[Math.floor(Math.random() * (filtered.length > 0 ? filtered.length : pool.length))];
+  if (pick) preloadAndPlay(pick, chDef);
 }
 
-function nextRandomChannel() {
-  if (videoAnims.length === 0) return;
-  const next = pickRandomChannel();
-  if (!next) return;
-  channelHistory.push(next);
-  if (channelHistory.length > 99) channelHistory = channelHistory.slice(-50);
-  tuneToChannel(next, channelHistory.length);
-  currentChannel = channelHistory.length;
+function changeChannel(dir) {
+  let next = currentChannel + dir;
+  if (next > 8) next = 1;
+  if (next < 1) next = 8;
+  tuneToChannel(next);
 }
 
-function prevChannel() {
-  if (channelHistory.length <= 1) {
-    // wrap around
-    nextRandomChannel();
+// ============================================================
+// KNOB RAYCASTING
+// ============================================================
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let isDragging = false;
+let prevMouseY = 0;
+let dragAccum = 0;
+
+function getIntersection(e) {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  return raycaster.intersectObjects([knobBase, knobGrip], true);
+}
+
+let knobClickStart = 0;
+
+window.addEventListener('mousedown', (e) => {
+  const hits = getIntersection(e);
+  if (hits.length > 0) {
+    isDragging = true; prevMouseY = e.clientY; dragAccum = 0;
+    knobClickStart = performance.now();
+    document.body.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) {
+    const hits = getIntersection(e);
+    document.getElementById('customCursor').classList.toggle('hovering', hits.length > 0);
     return;
   }
-  channelHistory.pop();
-  const prev = channelHistory[channelHistory.length - 1];
-  tuneToChannel(prev, channelHistory.length);
-  currentChannel = channelHistory.length;
-}
-
-// ============================================================
-// Initialize on load
-// ============================================================
-setTimeout(function() {
-  if (videoAnims.length > 0) {
-    var first = videoAnims[Math.floor(Math.random() * videoAnims.length)];
-    channelHistory = [first];
-    tuneToChannel(first, 1);
-    currentChannel = 1;
-  }
-}, 2800);
-
-// ============================================================
-// Search — find and jump to animation
-// ============================================================
-document.getElementById('searchInput').addEventListener('input', function(e) {
-  var query = e.target.value.trim().toLowerCase();
-  if (!query) return;
-  var match = videoAnims.find(function(a) {
-    return a.title.toLowerCase().indexOf(query) !== -1 ||
-           (a.titleEn && a.titleEn.toLowerCase().indexOf(query) !== -1);
-  });
-  if (match && match !== currentAnim) {
-    channelHistory.push(match);
-    tuneToChannel(match, channelHistory.length);
-    currentChannel = channelHistory.length;
+  const dy = prevMouseY - e.clientY;
+  dragAccum += dy; prevMouseY = e.clientY;
+  if (Math.abs(dragAccum) >= 30) {
+    const dir = dragAccum > 0 ? 1 : -1; dragAccum = 0;
+    changeChannel(dir);
+    knobAngle += dir * 45;
+    knobGroup.rotation.z = THREE.MathUtils.degToRad(knobAngle);
   }
 });
 
-// ============================================================
-// Filter buttons — filter from videoAnims
-// ============================================================
-document.querySelectorAll('.filter-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    var filter = btn.dataset.filter;
-    var pool = videoAnims;
-    if (filter === 'domestic') pool = videoAnims.filter(function(a) { return a.type === 'domestic'; });
-    if (filter === 'imported') pool = videoAnims.filter(function(a) { return a.type === 'imported'; });
-    if (pool.length === 0) return;
-    var pick = pool[Math.floor(Math.random() * pool.length)];
-    if (pick !== currentAnim) {
-      channelHistory.push(pick);
-      tuneToChannel(pick, channelHistory.length);
-      currentChannel = channelHistory.length;
-    }
-  });
+window.addEventListener('mouseup', () => {
+  if (isDragging && performance.now() - knobClickStart < 200 && Math.abs(dragAccum) < 8) {
+    initAudio(); playClick(); tuneToChannel(currentChannel);
+  }
+  isDragging = false; document.body.style.cursor = '';
 });
 
-// ============================================================
-// Keyboard — left/right for channel surfing
-// ============================================================
-document.addEventListener('keydown', function(e) {
+// Touch support
+window.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects([knobBase, knobGrip], true);
+    if (hits.length > 0) { isDragging = true; prevMouseY = e.touches[0].clientY; dragAccum = 0; e.preventDefault(); }
+  }
+}, {passive: false});
+
+window.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+  const dy = prevMouseY - e.touches[0].clientY;
+  dragAccum += dy; prevMouseY = e.touches[0].clientY;
+  if (Math.abs(dragAccum) >= 30) {
+    const dir = dragAccum > 0 ? 1 : -1; dragAccum = 0;
+    changeChannel(dir);
+    knobAngle += dir * 45;
+    knobGroup.rotation.z = THREE.MathUtils.degToRad(knobAngle);
+  }
+  e.preventDefault();
+}, {passive: false});
+
+window.addEventListener('touchend', () => { isDragging = false; });
+
+// Keyboard
+window.addEventListener('keydown', (e) => {
   if (document.getElementById('modalOverlay').classList.contains('open')) return;
-  if (document.activeElement === document.getElementById('searchInput')) return;
   if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-    e.preventDefault();
-    nextRandomChannel();
+    e.preventDefault(); initAudio(); playClick();
+    changeChannel(1); knobAngle += 45;
+    knobGroup.rotation.z = THREE.MathUtils.degToRad(knobAngle);
   } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-    e.preventDefault();
-    prevChannel();
+    e.preventDefault(); initAudio(); playClick();
+    changeChannel(-1); knobAngle -= 45;
+    knobGroup.rotation.z = THREE.MathUtils.degToRad(knobAngle);
   }
 });
 
 // ============================================================
-// Click video area to open detail modal
-// ============================================================
-document.getElementById('nowPlaying').addEventListener('click', function(e) {
-  if (e.target.closest('.np-info-bar')) return;
-  if (currentAnim) {
-    openModal(currentAnim.id);
-  }
-});
-
-// ============================================================
-// Modal — Detail view
+// MODAL
 // ============================================================
 const modalOverlay = document.getElementById('modalOverlay');
 const modalBody = document.getElementById('modalBody');
-const modalClose = document.getElementById('modalClose');
 
 function openModal(id) {
-  const anim = animations.find(function(a) { return a.id === id; });
+  const anim = animations.find(a => a.id === id);
   if (!anim) return;
-
   const typeLabel = anim.type === 'domestic' ? '国产' : '引进';
-  const typeCls = anim.type === 'domestic' ? 'badge-domestic' : 'badge-imported';
-
-  let charsHTML = '';
-  if (anim.characters && anim.characters.length > 0) {
-    charsHTML = anim.characters.map(function(c) {
-      return '<div class="char-card"><div class="char-name">' + c.name + '</div><div class="char-desc">' + c.desc + '</div></div>';
-    }).join('');
-  } else {
-    charsHTML = '<p style="color:var(--text-dim);">资料收集中...</p>';
-  }
-
-  let videoHTML = '';
+  let vidHTML = '';
   if (anim.videoUrl && anim.videoUrl.trim()) {
-    const autoUrl = anim.videoUrl.replace('autoplay=0','autoplay=1');
-    videoHTML = '<div class="video-container"><iframe src="' + autoUrl + '" allowfullscreen allow="autoplay"></iframe></div>';
-  } else {
-    videoHTML = '<div class="video-placeholder"><span>📺 经典片段采集中 · 敬请期待</span></div>';
+    let mu = anim.videoUrl.replace('autoplay=0','autoplay=1');
+    if (!mu.includes('danmaku=')) mu += '&danmaku=0';
+    if (!mu.includes('t=')) mu += '&t=2';
+    vidHTML = '<div class="video-wrap"><iframe src="'+mu+'" allowfullscreen allow="autoplay"></iframe></div>';
   }
+  let charsHTML = (anim.characters||[]).map(c =>
+    '<div style="background:rgba(10,8,2,.9);border:1px solid rgba(238,153,32,.2);border-radius:4px;padding:10px;margin-bottom:8px"><div style="font-size:.75rem;color:#ff9d20;font-weight:bold;margin-bottom:4px">'+c.name+'</div><div style="font-size:.65rem;color:#ffe8c8">'+c.desc+'</div></div>'
+  ).join('');
 
-  modalBody.innerHTML = '<div class="modal-title-zh">' + anim.title + '</div>' +
-    '<div class="modal-title-en">' + anim.titleEn + '</div>' +
-    '<div class="modal-meta"><span>' + anim.year + '</span><span class="badge ' + typeCls + '" style="font-size:0.7rem;">' + typeLabel + '</span><span>' + anim.country + '</span></div>' +
-    '<div class="modal-tabs"><button class="modal-tab" data-pane="video">经典片段</button><button class="modal-tab" data-pane="synopsis">故事简介</button><button class="modal-tab" data-pane="characters">主角介绍</button></div>' +
-    '<div class="modal-pane active" data-pane="video">' + videoHTML + '</div>' +
-    '<div class="modal-pane" data-pane="synopsis"><p>' + anim.synopsis + '</p></div>' +
-    '<div class="modal-pane" data-pane="characters">' + charsHTML + '</div>';
+  modalBody.innerHTML =
+    '<div class="modal-title">'+anim.title+'</div>'+
+    '<div style="font-size:.6rem;color:#998870;margin-bottom:2px">'+anim.titleEn+'</div>'+
+    '<div class="modal-meta"><span>'+anim.year+'</span><span style="color:'+(anim.type==='domestic'?'#4da6ff':'#ff7c3a')+'">'+typeLabel+'</span><span>'+anim.country+'</span></div>'+
+    '<div class="modal-tabs"><button class="modal-tab" data-pane="video">经典片段</button><button class="modal-tab active" data-pane="synopsis">故事简介</button><button class="modal-tab" data-pane="characters">主角介绍</button></div>'+
+    '<div class="modal-pane" data-pane="video">'+vidHTML+'</div>'+
+    '<div class="modal-pane active" data-pane="synopsis"><p>'+anim.synopsis+'</p></div>'+
+    '<div class="modal-pane" data-pane="characters">'+charsHTML+'</div>';
 
-  modalBody.querySelectorAll('.modal-tab').forEach(function(tab) {
+  modalBody.querySelectorAll('.modal-tab').forEach(tab => {
     tab.addEventListener('click', function() {
-      const pane = tab.dataset.pane;
-      modalBody.querySelectorAll('.modal-tab').forEach(function(t) { t.classList.remove('active'); });
-      modalBody.querySelectorAll('.modal-pane').forEach(function(p) { p.classList.remove('active'); });
-      tab.classList.add('active');
-      modalBody.querySelector('.modal-pane[data-pane="' + pane + '"]').classList.add('active');
+      const pane = this.dataset.pane;
+      modalBody.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+      modalBody.querySelectorAll('.modal-pane').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      modalBody.querySelector('.modal-pane[data-pane="'+pane+'"]').classList.add('active');
     });
   });
-
   modalOverlay.classList.add('open');
 }
 
-function closeModal() {
-  modalOverlay.classList.remove('open');
-  modalBody.innerHTML = '';
+function closeModal() { modalOverlay.classList.remove('open'); modalBody.innerHTML = ''; }
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modalOverlay.classList.contains('open')) closeModal();
+});
+
+document.getElementById('tvScreenOverlay').addEventListener('click', (e) => {
+  if (e.target.closest('#modalOverlay') || e.target.closest('#newspaper') ||
+      e.target.closest('#npInfo') || isDragging) return;
+  if (currentAnim) openModal(currentAnim.id);
+});
+
+// ============================================================
+// NEWSPAPER
+// ============================================================
+function renderNewspaper() {
+  const grid = document.getElementById('npGrid');
+  grid.innerHTML = programGuide.map(item =>
+    '<div class="np-item" data-anim-id="'+(item.animId||'')+'"><span class="np-time">'+item.time+'</span>'+item.title+'</div>'
+  ).join('');
+  grid.querySelectorAll('.np-item').forEach(item => {
+    item.addEventListener('click', () => { const aid = parseInt(item.dataset.animId); if (aid) openModal(aid); });
+  });
+}
+document.getElementById('tvScreenOverlay').addEventListener('dblclick', (e) => {
+  if (e.target.closest('#modalOverlay')) return;
+  document.getElementById('newspaper').classList.toggle('visible');
+});
+
+// ============================================================
+// CLOCK
+// ============================================================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('screenClock').textContent =
+    String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
 }
 
-modalClose.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', function(e) {
-  if (e.target === modalOverlay) closeModal();
+// ============================================================
+// CUSTOM CURSOR
+// ============================================================
+const cursorEl = document.getElementById('customCursor');
+const cursorDot = document.getElementById('cursorDot');
+document.addEventListener('mousemove', (e) => {
+  cursorEl.style.left = e.clientX+'px'; cursorEl.style.top = e.clientY+'px';
+  cursorDot.style.left = e.clientX+'px'; cursorDot.style.top = e.clientY+'px';
 });
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
-    closeModal();
+document.addEventListener('mouseleave', () => { cursorEl.style.opacity='0'; cursorDot.style.opacity='0'; });
+document.addEventListener('mouseenter', () => { cursorEl.style.opacity='1'; cursorDot.style.opacity='1'; });
+document.getElementById('tvScreenOverlay').addEventListener('mouseenter', () => {
+  cursorEl.style.opacity='0'; cursorDot.style.opacity='0';
+});
+document.getElementById('tvScreenOverlay').addEventListener('mouseleave', () => {
+  cursorEl.style.opacity='1'; cursorDot.style.opacity='1';
+});
+
+// ============================================================
+// POWER
+// ============================================================
+powerLed.userData = { on: true };
+tvScreen.userData = { powered: true };
+
+window.addEventListener('click', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(powerLed);
+  if (hits.length > 0 && !isDragging && !modalOverlay.classList.contains('open')) {
+    initAudio();
+    const isOn = powerLed.userData.on;
+    powerLed.userData.on = !isOn;
+    tvScreen.userData.powered = !isOn;
+    powerLed.material.color.set(isOn ? '#440000' : '#00ff00');
+    powerLed.material.emissive.set(isOn ? '#220000' : '#00ff00');
+    powerLed.material.emissiveIntensity = isOn ? 0.3 : 3;
+    screenMat.emissiveIntensity = isOn ? 0.01 : 0.5;
+    playPowerToggle(!isOn);
+    if (isOn) {
+      document.getElementById('npVideo').innerHTML = '';
+      document.getElementById('npPreload').innerHTML = '';
+      currentAnim = null;
+      if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
+    } else { tuneToChannel(currentChannel); }
   }
 });
 
-// No resize re-render needed for now-playing mode
+// ============================================================
+// BOOT SEQUENCE
+// ============================================================
+window.addEventListener('load', () => {
+  const bootOverlay = document.getElementById('bootOverlay');
+  const bootText = document.getElementById('bootText');
+  const bootSub = document.getElementById('bootSub');
+  initAudio(); playBootHum();
+  setTimeout(() => { bootText.classList.add('show'); }, 1600);
+  setTimeout(() => { bootSub.classList.add('show'); }, 2500);
+  setTimeout(() => { bootOverlay.classList.add('hidden'); initTV(); }, 3600);
+});
+
+function initTV() {
+  tuneToChannel(2);
+  updateClock();
+  setInterval(updateClock, 30000);
+  renderNewspaper();
+}
+
+// ============================================================
+// RESIZE
+// ============================================================
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  composer.setSize(window.innerWidth, window.innerHeight);
+  updateScreenOverlay();
+});
+
+// ============================================================
+// RENDER LOOP
+// ============================================================
+function animate(time) {
+  requestAnimationFrame(animate);
+  const breathe = 1 + Math.sin(time * 0.0008) * 0.12;
+  tvGlow.intensity = 30 * breathe;
+  bloomPass.strength = 1.0 * breathe;
+  composer.render();
+  updateScreenOverlay();
+}
+
+updateScreenOverlay();
+requestAnimationFrame(animate);
 </script>
 </body>
 </html>
